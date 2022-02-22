@@ -28,7 +28,7 @@ class WorkerService
 
     /** This function gets all the mail that must be send */
     private function SendMailGenerated(){
-        $dataset = $this->databaseConnection->GetDataset("SELECT * FROM `_mail` WHERE date_sent IS NULL");
+        $dataset = $this->databaseConnection->GetDataset("SELECT * FROM `__communication` WHERE date_sent IS NULL");
 
         foreach($dataset as $row){
             $mailId = $row["id"];
@@ -39,13 +39,13 @@ class WorkerService
             // Update the table
             $this->databaseConnection->ClearParameters();
             $this->databaseConnection->AddParameter("mailId", $mailId);
-            $this->databaseConnection->ExecuteQuery("UPDATE `_mail` SET date_processed = NOW(), last_attempt = NOW() WHERE id = ?mailId");
+            $this->databaseConnection->ExecuteQuery("UPDATE `__communication` SET date_processed = NOW(), last_attempt = NOW() WHERE id = ?mailId");
 
             // Send the mail
             $this->communicationService->useEventToSendMail = false;
             $this->communicationService->SendMail($receiverMailAddress, $mailBody, $mailSubject);
 
-            $this->databaseConnection->ExecuteQuery("UPDATE `_mail` SET date_sent = NOW() WHERE id = ?mailId");
+            $this->databaseConnection->ExecuteQuery("UPDATE `__communication` SET date_sent = NOW() WHERE id = ?mailId");
         }
     }
 

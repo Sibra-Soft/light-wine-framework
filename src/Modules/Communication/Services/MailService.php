@@ -122,9 +122,9 @@ Class MailService extends CommunicationService {
         $this->databaseService->AddParameter("subject", $subject);
         $this->databaseService->AddParameter("body", $body);
         $this->databaseService->AddParameter("date_scheduled", $scheduledTime->format("Y-m-d h:i:s"));
-        $this->databaseService->AddParameter("type", "mail");
+        $this->databaseService->AddParameter("type", "email");
 
-        $this->databaseService->helpers->UpdateOrInsertRecordBasedOnParameters("_mail");
+        $this->databaseService->helpers->UpdateOrInsertRecordBasedOnParameters("__communication");
     }
 }
 ?>
