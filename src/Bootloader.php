@@ -4,6 +4,8 @@ namespace LightWine;
 use LightWine\Core\Services\ServerService;
 use LightWine\Core\Services\RequestService;
 
+use \Exception;
+
 class Bootloader {
 	private function Autoloader(){
         spl_autoload_register(function($class){
@@ -34,6 +36,14 @@ class Bootloader {
     }
 
     /**
+     * Used for exception handeling of the total framework
+     * @param Exception $exception The thrown exception
+     */
+    public function SetExceptionHandler(Exception $exception){
+
+    }
+
+    /**
      * Adds the specified configuration file to the project
      * @param string $file The path to the configuration file
      */
@@ -46,6 +56,7 @@ class Bootloader {
      */
     public function Run(){
         set_error_handler(array($this, 'SetErrorHandler'));
+        set_exception_handler(array($this, "SetExceptionHandler"));
 
         $this->Autoloader();
 
