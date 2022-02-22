@@ -107,9 +107,8 @@ class CacheService {
      */
     public function ClearAllCache(){
         $files = glob($_SERVER["DOCUMENT_ROOT"].'/cache/*'); // get all file names
-        foreach($files as $file){ // iterate files
-            if(is_file($file))
-                unlink($file); // delete file
+        foreach($files as $file){
+            if(is_file($file)) unlink($file);
         }
 
         $this->ClearCache();

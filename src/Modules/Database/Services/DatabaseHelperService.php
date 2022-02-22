@@ -172,7 +172,7 @@ class DatabaseHelperService {
             $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("site_files");
         }
 
-        $uploadModel->Id = $this->databaseConnection->rowInsertId;
+        $uploadModel->Id = $this->databaseConnection->rowCount;
 
         return $uploadModel;
     }

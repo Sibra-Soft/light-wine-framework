@@ -9,6 +9,8 @@ use LightWine\Modules\Templates\Services\MinifierService;
 use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templates\Models\TemplateModel;
+use LightWine\Modules\Cache\Services\CacheService;
+use LightWine\Core\Enums\EnvironmentEnum;
 
 class ResourceService {
     private string $contentJS = "";
@@ -19,6 +21,7 @@ class ResourceService {
     private MinifierService $minifierService;
     private TemplatingService $templatingService;
     private TemplatesService $templateService;
+    private CacheService $cacheService;
 
     public function __construct(){
         $this->databaseConnection = new MysqlConnectionService();
@@ -26,6 +29,7 @@ class ResourceService {
         $this->minifierService = new MinifierService();
         $this->templatingService = new TemplatingService();
         $this->templateService = new TemplatesService();
+        $this->cacheService = new CacheService();
     }
 
     /**
@@ -41,6 +45,9 @@ class ResourceService {
      * @return string
      */
     private function GenerateMasterpageFile($type){
+        // Delete the cache on the development enviroment
+        if($this->settings->GetAppSetting("enviroment") == EnvironmentEnum::Development) $this->cacheService->ClearAllCache();
+
         if(file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js") and file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css")){
             $this->contentCSS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css");
             $this->contentJS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js");

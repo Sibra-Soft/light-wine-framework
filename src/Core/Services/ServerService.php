@@ -44,7 +44,7 @@ class ServerService implements IServerService
             switch($this->request->Route->Type){
                 case RouteTypeEnum::Channel: $responseModel->Page = $this->serviceProviderService->CheckForServiceRequest($this->request->Route->Url); break;
                 case RouteTypeEnum::TemplateLink: $responseModel->Page = $this->pageService->Render(); break;
-                case RouteTypeEnum::ApiHandler: $responseModel->Page = $this->apiService->Start(); break;
+                case RouteTypeEnum::ApiHandler: $responseModel->Page->Content = $this->apiService->Start(); break;
             }
 
             // Add the headers to the server response
