@@ -26,7 +26,7 @@ Below you find a example of a configuration file for a website/webapplication cr
   "connections": {
     // Here you can add connectionstring of your databases
   },
-  "cache_folder": "~/cache/", // Specifies the location of the cache folder use ~ to start from the document root
+  "cache_folder": "~/cache/", // Specifies the location of the cache folder
   "environment": "dev", // Specifies the current enviroment (dev, test or live)
   "tracing": false, // Enables the tracing of the framework for easy debugging
   "log_traffic": true, // Logs website visitor details to a file
