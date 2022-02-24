@@ -18,13 +18,14 @@ class ConfigurationManagerService
      * Loads the specified configuration file to the settings object
      */
     private function LoadSettingsFile(){
-        try {
-            $this->Settings = json_decode(Helpers::GetFileContent($GLOBALS["ConfigFile"]), true);
-            $GLOBALS["Settings"] = $this->Settings;
+        $configFile = $GLOBALS["ConfigFile"];
+
+        if(!file_exists($configFile)){
+            throw new Exception("The specified application configuration file could not be found");
         }
-        catch (Exception $e) {
-            echo($e->getMessage);
-        }
+
+        $this->Settings = json_decode(Helpers::GetFileContent($configFile), true);
+        $GLOBALS["Settings"] = $this->Settings;
     }
 
     /**
