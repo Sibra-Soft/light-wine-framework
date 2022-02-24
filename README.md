@@ -6,7 +6,7 @@
 The LightWine framework is a PHP framework that can be used for creating websites and webapplications. The framework has various useful functions and classes that make it easy creating websites.
 
 ## Getting started
-* [Installation]()
+* [Installation](https://github.com/Sibra-Soft/LightWineFramework/wiki/Installation)
 
 ## Features
 * [Database connection]()
@@ -34,11 +34,11 @@ Below you find a example of a configuration file for a website/webapplication cr
   "log_database": false, // Enables logging to the database instead of a file
   "gzip_encode": true, // Enables gzip compression for all content provided by the framework
   "smtp": {
-    "host": "smtp.example.com" // Hostname of your smtp server,
-    "port": 587 // Port number of your smtp server,
-    "username": "example@example.com" // Username of your smtp server,
-    "password": "" // Password of your smtp server,
-    "from_name": "Exmaple" // The name you want to use to send the mail,
+    "host": "smtp.example.com", // Hostname of your smtp server
+    "port": 587, // Port number of your smtp server
+    "username": "example@example.com", // Username of your smtp server
+    "password": "", // Password of your smtp server
+    "from_name": "Exmaple", // The name you want to use to send the mail
     "from_address": "example@example.com" // The emailaddress you want to use to send the mail
   }
 }
