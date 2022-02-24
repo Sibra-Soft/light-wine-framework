@@ -44,13 +44,10 @@ class MysqlConnectionService implements IMysqlConnectionService {
 
                 self::$DatabaseConnection = $this->dbConnection;
             }
-
-            //$this->helpers = new DalHelpers($this);
         }
         catch(PDOException $e)
         {
-            echo("Mysql connection error: ".$e->getMessage());
-            exit();
+            throw new Exception("Mysql connection error: ".$e->getMessage());
         }
     }
 
