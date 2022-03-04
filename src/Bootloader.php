@@ -3,8 +3,11 @@ namespace LightWine;
 
 use LightWine\Core\Services\ServerService;
 use LightWine\Core\Services\RequestService;
+use LightWine\Core\Services\PreparationService;
 
 use \Exception;
+use TypeError;
+use Error;
 
 class Bootloader {
 	private function Autoloader(){
@@ -37,10 +40,10 @@ class Bootloader {
 
     /**
      * Used for exception handeling of the total framework
-     * @param Exception $exception The thrown exception
+     * @param TypeError|Exception|Error $exception The thrown exception
      */
-    public function SetExceptionHandler(Exception $exception){
-
+    public function SetExceptionHandler($exception){
+        echo("<strong>Exception</strong>: ".$exception->getMessage());
     }
 
     /**
@@ -59,6 +62,9 @@ class Bootloader {
         set_exception_handler(array($this, "SetExceptionHandler"));
 
         $this->Autoloader();
+
+        //$prep = new PreparationService();
+        //$prep->RunSetup();
 
         $request = new RequestService();
         $requestModel = $request->GetRouteBasedOnRequestUrl();
