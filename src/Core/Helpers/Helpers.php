@@ -156,8 +156,8 @@ class Helpers {
     public static function GetFileContent($filename){
         $content = "";
 
-        $filename = str_replace("~", dirname(__FILE__, 3), $filename);
-               
+        $filename = str_replace("/src/src/", "/src/", str_replace("~", dirname(__FILE__, 3), $filename));
+
         $myfile = fopen($filename, "r") or die("Unable to open file: ".$filename);
         $content = fread($myfile, filesize($filename));
         fclose($myfile);
