@@ -111,7 +111,8 @@ class SamService implements ISamService {
 	            `user`.id,
 	            `user`.username,
 	            IFNULL(`user`.`display_name`, `user`.username) AS `display_name`,
-	            LOWER(`role`.description) AS `role`
+	            LOWER(`role`.description) AS `role`,
+                IFNULL(`user`.settings, '{}') AS settings
             FROM `_users` AS `user`
             INNER JOIN `_user_roles` AS role ON role.id = `user`.role_id
             WHERE `username` = ?loginUsername
@@ -133,6 +134,7 @@ class SamService implements ISamService {
             $responseModel->UserId = $this->databaseConnection->DatasetFirstRow("id");
             $responseModel->Username = $username;
             $responseModel->LoginCorrect = true;
+            $responseModel->Settings = json_decode($this->databaseConnection->DatasetFirstRow("settings"), true);
 
             // Write the session variables
             $_SESSION["Checksum"] = $responseModel->Checksum;
@@ -142,6 +144,7 @@ class SamService implements ISamService {
             $_SESSION["UserRole"] = implode(",", $responseModel->Roles);
             $_SESSION["Username"] = $responseModel->Username;
             $_SESSION["ClientToken"] = $responseModel->ClientToken;
+            $_SESSION["UserSettings"] = $responseModel->Settings;
         }else{
             $responseModel->LoginCorrect = false;
         }

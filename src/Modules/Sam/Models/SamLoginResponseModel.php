@@ -10,6 +10,7 @@ class SamLoginResponseModel
     public string $Checksum;
 
     public array $Roles;
+    public array $Settings;
 
     public int $UserId;
 

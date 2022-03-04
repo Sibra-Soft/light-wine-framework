@@ -93,6 +93,11 @@ class TemplatingService implements ITemplatingService
         foreach($_SESSION as $key => $value){
             $this->AddReplaceVariable("session_".strtolower($key), $value);
         }
+
+        // Add user settings
+        foreach($_SESSION["UserSettings"] as $key => $value){
+            $this->AddReplaceVariable("settings_".strtolower($key), $value);
+        }
     }
 
     public function AddBindingValuesToStore(int $templateId){
@@ -124,14 +129,6 @@ class TemplatingService implements ITemplatingService
 
                     //$form = new webformservice;
                     //$content = $this->ReplaceVariable($variable, $form->RenderWebform($variableValue), $content);
-                    break;
-
-                case "module":
-                    // Todo: Add module functionality
-
-                    //$moduleService = new services\ModuleService();
-                    //$content = $this->ReplaceVariable($variable, $moduleService->RunServiceModule($variableValue), $content);
-
                     break;
 
                 // This will replace the image tag
