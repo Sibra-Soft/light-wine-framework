@@ -24,6 +24,8 @@ class DatabaseHelperService {
      * @param string $targetTable The table the data must be added, or changed
      */
     public function SyncSet(array $mutationArray, string $targetTable, array $options){
+        $this->queryBuilder->Clear();
+
         $queries = "";
 
         foreach ($mutationArray as $key) {
@@ -84,6 +86,7 @@ class DatabaseHelperService {
      * @param int $id The id of the record that must be deleted
      */
     public function DeleteRecord(string $table, int $id){
+        $this->queryBuilder->Clear();
         $this->queryBuilder->Delete($table);
         $this->queryBuilder->Where(QueryExtenderEnum::Nothing, "id", QueryOperatorsEnum::EqualTo, $id);
 
@@ -97,6 +100,7 @@ class DatabaseHelperService {
      */
     public function UpdateOrInsertRecordBasedOnParameters(string $table, int $id = null, bool $ignoreDuplicates = false):int {
         $this->queryBuilder->ignoreDuplicatesOnInsert = $ignoreDuplicates;
+        $this->queryBuilder->Clear();
 
         // Generate the query build on the specified parameters
         $parameters = $this->databaseConnection->mysqlQueryParameters;

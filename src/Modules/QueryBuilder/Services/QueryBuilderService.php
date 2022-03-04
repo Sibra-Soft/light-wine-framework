@@ -6,29 +6,25 @@ use LightWine\Modules\QueryBuilder\Enums\QueryOperatorsEnum;
 
 class QueryBuilderService
 {
-    // Class variables
-
-    // Example of QueryConstructor
-    // "0_STATEMENT" => "SELECT",
-    // "1_DATA" => ["SELECT" => "*"],
-    // "2_FROM" => "",
-    // "3_WHERE" => [],
-    // "4_GROUP_BY" => "",
-    // "5_ORDER_BY" => "",
-    // "6_LIMIT" => 0
-
-    protected $queryConstructor = [
-        "0_STATEMENT" => "SELECT",
-        "1_DATA" => ["SELECT" => "*"],
-        "2_FROM" => "",
-        "3_WHERE" => [],
-        "4_GROUP_BY" => "",
-        "5_ORDER_BY" => "",
-        "6_LIMIT" => 0
-    ];
+    protected $queryConstructor = [];
 
     public bool $ignoreDuplicatesOnInsert = false;
 
+    /**
+     * Clears the constructor
+     */
+    public function Clear(){
+        $this->queryConstructor = [
+            "0_STATEMENT" => "SELECT",
+            "1_DATA" => ["SELECT" => "*"],
+            "2_FROM" => "",
+            "3_WHERE" => [],
+            "4_GROUP_BY" => "",
+            "5_ORDER_BY" => "",
+            "6_LIMIT" => 0
+        ];
+    }
+       
     /**
      * This function will insert a new record in the specified table
      * @param string $table The target table
