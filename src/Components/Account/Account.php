@@ -10,22 +10,23 @@ use LightWine\Modules\Sam\Models\SamLoginResponseModel;
 use LightWine\Modules\Communication\Services\MailService;
 use LightWine\Modules\Sam\Services\SamService;
 use LightWine\Modules\Api\Enums\RequestMethodesEnum;
+use LightWine\Components\Account\Models\AccountComponentModel;
 
 class Account {
-    private $controlId = 0;
     private $returnOutput = "";
 
     private ComponentBase $control;
     private MysqlConnectionService $databaseConnection;
     private MailService $mailService;
     private SamService $samService;
+    private AccountComponentModel $component;
 
     public function __construct($id){
-        $this->controlId = $id;
-        $this->control = new ComponentBase($id);
+        $this->control = new ComponentBase();
         $this->databaseConnection = new MysqlConnectionService();
         $this->mailService = new MailService();
         $this->samService = new SamService();
+        $this->component = $this->control->GetSettings(new AccountComponentModel, $id);
     }
 
     public function Init(){
@@ -38,6 +39,14 @@ class Account {
 
     private function HandleLoginWithGoogle(){
 
+    }
+
+    private function HandleResetPasswordMode(){
+
+    }
+
+    private function HandleDeleteAccount(){
+        
     }
 
     /**
@@ -66,7 +75,7 @@ class Account {
 
             if($requestPassword !== $requestPasswordConfirm){
 
-                $errorTemplate = $this->control->GetControlTemplate("ErrorTemplate");
+                $errorTemplate = $this->component->ErrorTemplate;
                 $errorTemplate = str_replace("{{message}}", "Gebruikersnaam of wachtwoord onjuist", $errorTemplate);
                 $errorTemplate = str_replace("{{message-internal}}", "PASSWORD_NO_MATCH", $errorTemplate);
 
@@ -74,7 +83,7 @@ class Account {
 
             }elseif($this->CheckIfAccountAlreadyExists($requestUsername)){
 
-                $errorTemplate = $this->control->GetControlTemplate("ErrorTemplate");
+                $errorTemplate = $this->component->ErrorTemplate;
                 $errorTemplate = str_replace("{{message}}", "U heeft al een account", $errorTemplate);
                 $errorTemplate = str_replace("{{message-internal}}", "ACCOUNT_EXISTS", $errorTemplate);
 
@@ -82,7 +91,7 @@ class Account {
 
             }else{
 
-                $password = hash("sha512", $requestPassword.$this->control->GetSettings("BlowfishSecret"));
+                $password = hash("sha512", $requestPassword.$this->component->BlowfishSecret);
                 $hash = sha1(Helpers::NewGuid());
 
                 if(StringHelpers::IsNullOrWhiteSpace($requestFullname)){
@@ -99,11 +108,11 @@ class Account {
                 $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("_users");
 
                 // Send a activation mail to the user
-                $mailTemplate = $this->control->GetSettings("MailTemplate");
+                $mailTemplate = $this->component->MailTemplate;
                 $this->mailService->AssignVariable("token", $hash);
                 $this->mailService->SendMailFromTemplate($requestUsername, $mailTemplate, "Welkom bij Moviedos");
 
-                $successTemplate = $this->control->GetControlTemplate("SuccessTemplate");
+                $successTemplate = $this->component->SuccessTemplate;
                 $successTemplate = str_replace("{{message-internal}}", "OK", $successTemplate);
 
                 $this->returnOutput = $successTemplate;
@@ -126,20 +135,15 @@ class Account {
         if($this->databaseConnection->rowCount > 0){
             $this->databaseConnection->ExecuteQuery("UPDATE `_users` SET confirm_hash = 1 WHERE confirm_hash = ?hash LIMIT 1;");
 
-            $this->returnOutput = $this->control->GetControlTemplate("SuccessTemplate");
+            $this->returnOutput = $this->component->SuccessTemplate;
         }else{
             $this->returnOutput = "Het opgegeven account kan niet worden gevonden, wellicht is het gekoppelde account al eerdere geactiveerd";
         }
     }
 
     private function HandleLoginMode(){
-        $this->returnOutput = $this->control->GetControlTemplate("MainTemplate");
-        $errorTemplate = $this->control->GetControlTemplate("ErrorTemplate");
-
-        // Redirect the user if a redirect URL has been set
-        if($this->samService->CheckIfUserIsLoggedin() and (!(StringHelpers::IsNullOrWhiteSpace($this->control->GetSettings("RedirectUrl"))))){
-            header('location: '.$this->control->GetSettings("RedirectUrl"));
-        }
+        $this->returnOutput = $this->component->MainTemplate;
+        $errorTemplate = $this->component->ErrorTemplate;
 
         // Check if the current request is a Post request
         if($_SERVER['REQUEST_METHOD'] == RequestMethodesEnum::POST){
@@ -160,7 +164,7 @@ class Account {
             }
 
             // Check if the specified login is correct
-            $this->samService->passwordBlowFish = $this->control->GetSettings("BlowfishSecret");
+            $this->samService->passwordBlowFish = $this->component->BlowfishSecret;
             $loginResponse = $this->samService->Login($username, $password);
 
             if(!$loginResponse->LoginCorrect){
@@ -170,10 +174,10 @@ class Account {
                 $this->returnOutput = str_replace("{{error-template}}", $errorTemplate, $this->returnOutput);
             }else{
                 if($this->samService->CheckDeviceRegistration()){
-                    if($this->control->GetSettings("RedirectUrl")){
-                        header('location: '.$this->control->GetSettings("RedirectUrl"));
+                    if($this->component->RedirectUrl and $this->component->RedirectAfterLogin){
+                        header('location: '.$this->component->RedirectUrl);
                     }else{
-                        $this->returnOutput  = $this->control->GetControlTemplate("SuccessTemplate");
+                        $this->returnOutput  = $this->component->SuccessTemplate;
                     }
                 }else{
                     $registerPincode = $this->samService->RegisterDevice();
@@ -185,6 +189,10 @@ class Account {
                     $this->returnOutput = str_replace("{{error-template}}", $errorTemplate, $this->returnOutput);
                 }
             }
+        }else{
+            if($this->samService->CheckIfUserIsLoggedin() and !(StringHelpers::IsNullOrWhiteSpace($this->component->RedirectUrl)) and $this->component->RedirectIfLoggedIn){
+                header('location: '.$this->component->RedirectUrl);
+            }
         }
 
         $this->returnOutput = str_replace("{username}", $username, $this->returnOutput);
@@ -192,7 +200,7 @@ class Account {
     }
 
     private function HandleForgotPasswordMode(){
-        $mainTemplate = $this->control->GetControlTemplate("MainTemplate");
+        $mainTemplate = $this->component->MainTemplate;
 
         if($_SERVER['REQUEST_METHOD'] == RequestMethodesEnum::POST){
             $username = HttpContextHelpers::RequestVariable("login-username");
@@ -214,7 +222,7 @@ class Account {
             $this->mailService->AssignVariable("username", $username);
             $this->mailService->AssignVariable("hash", $hash);
             $this->mailService->AssignVariable("name", $userFullname);
-            $this->mailService->SendMailFromTemplate($username, $this->control->GetSettings("MailTemplate"), "Wachtwoord vergeten");
+            $this->mailService->SendMailFromTemplate($username, $this->component->MainTemplate, "Wachtwoord vergeten");
         }
 
         return $mainTemplate;
@@ -225,40 +233,40 @@ class Account {
         $this->mailService->SendMailFromTemplate($loginResponse->Username, "device-verification-mail", "Moviedos apparaat verificatie");
     }
 
-    private function HandleResetPasswordMode(){
-
-    }
-
     /**
      * This function renders the current control
      * @return string The HTML of the control that will be displayed on the page
      */
     private function RenderControl(){
-        $this->returnOutput = $this->control->GetControlTemplate("MainTemplate");
+        $this->returnOutput = $this->component->MainTemplate;
 
-        switch(strtolower($this->control->GetSettings("Mode"))){
-            case "logout":
-                $this->HandleLogoutMode();
-                break;
-
-            case "confirmaccount":
-                $this->HandleConfirmMode();
-                break;
-
-            case "login":
-                $this->HandleLoginMode();
-                break;
-
-            case "create":
+        switch((int)$this->component->Mode){
+            case 0: // Create account
                 $this->HandleCreateMode();
                 break;
 
-            case "resetpassword":
+            case 1: // Delete account
+                $this->HandleDeleteAccount();
+                break;
+
+            case 2: // Confirm account
+                $this->HandleConfirmMode();
+                break;
+
+            case 3: // Login
+                $this->HandleLoginMode();
+                break;
+
+            case 4: // Forgot password
+                $this->HandleForgotPasswordMode();
+                break;
+
+            case 5: // Reset password
                 $this->HandleResetPasswordMode();
                 break;
 
-            case "forgotpassword":
-                $this->HandleForgotPasswordMode();
+            case 6: // Logout
+                $this->HandleLogoutMode();
                 break;
         }
 

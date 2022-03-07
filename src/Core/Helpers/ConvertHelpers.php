@@ -4,6 +4,22 @@ namespace LightWine\Core\Helpers;
 class ConvertHelpers
 {
     /**
+     * Array to object
+     * @param array $data
+     * @return object
+     */
+    public static function ArrayToObject(array $data = [], $instance) {
+        foreach (get_object_vars($obj = $instance) as $property => $default) {
+            if(!array_key_exists($property, $data)) continue;
+            if(StringHelpers::IsNullOrWhiteSpace($data[$property])) continue;
+
+            $obj->{$property} = $data[$property];
+        }
+
+        return $obj;
+    }
+
+    /**
      * Convert the given value to decimal
      * @param float $price
      * @return string

@@ -7,6 +7,7 @@ use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Templates\Services\TemplatesService;
+use LightWine\Components\Dataview\Models\DataviewComponentModel;
 
 class Dataview {
     private int $PageCount = 1;
@@ -15,12 +16,14 @@ class Dataview {
     private TemplatingService $templatingService;
     private TemplatesService $templatesService;
     private MysqlConnectionService $databaseConnection;
+    private DataviewComponentModel $component;
 
     public function __construct($id){
-        $this->control = new ComponentBase($id);
+        $this->control = new ComponentBase();
         $this->templatingService = new TemplatingService();
         $this->templatesService = new TemplatesService();
         $this->databaseConnection = new MysqlConnectionService();
+        $this->component = $this->control->GetSettings(new DataviewComponentModel, $id);
     }
 
     private function RenderFiltersInQuery(TemplatingService $templating){
@@ -40,8 +43,14 @@ class Dataview {
         }
     }
 
-    private function GenerateQueryLimit(string $query, int $page = 1){
-        $limit = $this->control->GetSettings("MaxItemsVisible");
+    /**
+     * Add limit to the current component query
+     * @param string $query The query to modify
+     * @param int $page The current pagenumber
+     * @return string The new query with the added limit
+     */
+    private function GenerateQueryLimit(string $query, int $page = 1): string {
+        $limit = $this->component->MaxItemsVisible;
 
         $offset = ($page-1) * $limit;
         $limitPart = "LIMIT $offset,$limit;";
@@ -60,10 +69,10 @@ class Dataview {
      * @param string $query The current control query
      */
     private function GetPageCountFromQuery(MysqlConnectionService $dbConnection) {
-        $limit = $this->control->GetSettings("MaxItemsVisible");
+        $limit = $this->component->MaxItemsVisible;
         $this->templatingService->AddTemplatingVariablesToStore();
 
-        $queryTemplate = $this->templatesService->GetTemplateByName($this->control->GetSettings("CountQueryTemplate"), "sql");
+        $queryTemplate = $this->templatesService->GetTemplateByName($this->component->CountQueryTemplate, "sql");
         $queryTemplate = $this->templatingService->ReplaceVariablesFromStore($queryTemplate->Content);
         $queryTemplate = $this->templatingService->RunCompilers($queryTemplate);
 
@@ -78,10 +87,10 @@ class Dataview {
      * This function renders the control into plain HTML code
      * @return string
      */
-    private function RenderControl(){
+    private function RenderControl(): string {
         $this->templatingService->AddTemplatingVariablesToStore();
 
-        $queryTemplate = $this->templatesService->GetTemplateByName($this->control->GetSettings("MainQueryTemplate"), "sql")->Content;
+        $queryTemplate = $this->templatesService->GetTemplateByName($this->component->MainQueryTemplate, "sql")->Content;
 
         $this->RenderFiltersInQuery($this->templatingService);
 
@@ -90,11 +99,7 @@ class Dataview {
 
         // This gets the current page count
         $queryTemplate = $this->GenerateQueryLimit($queryTemplate, 1);
-
-
-        if($this->control->GetSettings("EnablePagination")){
-            $this->GetPageCountFromQuery($this->databaseConnection);
-        }
+        if($this->component->EnablePagination) $this->GetPageCountFromQuery($this->databaseConnection);
 
         // Render the query if a page number is specified
         $pageNr = (int)HttpContextHelpers::RequestVariable("page", 1);
@@ -108,17 +113,17 @@ class Dataview {
         $template = "";
 
         if($this->databaseConnection->rowCount > 0){
-            $template .= str_replace("{{row_count}}", $this->databaseConnection->rowCount, $this->control->GetControlTemplate("HeaderTemplate"));
+            $template .= str_replace("{{row_count}}", $this->databaseConnection->rowCount, $this->component->HeaderTemplate);
 
             $index = 0;
             foreach($dataset as $row){
-                $controlTemplate = $this->control->GetControlTemplate("RepeatTemplate");
+                $controlTemplate = $this->component->RepeatTemplate;
                 foreach($row as $key => $value){ $this->templatingService->AddReplaceVariable($key, $value); }
                 $controlTemplate = $this->templatingService->RunCompilers($controlTemplate);
 
                 $template .= $this->templatingService->ReplaceVariablesFromStore($controlTemplate);
 
-                if($this->control->GetSettings("DetermineOddEvenRows")){
+                if($this->component->DetermineOddEvenRows){
                     $index++;
 
                     if($index % 2 == 0){
@@ -128,13 +133,13 @@ class Dataview {
                     }
                 }
             }
-            $template .= $this->control->GetControlTemplate("FooterTemplate");
+            $template .= $this->component->FooterTemplate;
 
             // Generate the pagination part of the template
-            $template .= $this->control->GetControlTemplate("PaginationTemplate");
+            $template .= $this->component->PaginationTemplate;
             $template = str_replace("{{page_count}}", $this->PageCount, $template);
         }else{
-            $template .= $this->control->GetControlTemplate("NodataTemplate");
+            $template .= $this->component->NodataTemplate;
         }
 
         return $template;
