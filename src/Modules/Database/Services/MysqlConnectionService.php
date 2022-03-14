@@ -30,16 +30,19 @@ class MysqlConnectionService implements IMysqlConnectionService {
         $this->helpers = new DatabaseHelperService($this);
         $this->config = new ConfigurationManagerService();
 
-        $dbConString = $this->config->ConnectionStrings("defaultConnectionString");
-        $dbUsername = $this->config->ConnectionStrings("defaultConnectionString", "username");
-        $dbPassword = $this->config->ConnectionStrings("defaultConnectionString", "password");
+        // Get the settings for the connectionstring
+        $server = $this->config->ConnectionStrings("defaultConnectionString", "server");
+        $database = $this->config->ConnectionStrings("defaultConnectionString", "database");
+        $username = $this->config->ConnectionStrings("defaultConnectionString", "user");
+        $password = $this->config->ConnectionStrings("defaultConnectionString", "password");
+        $conString = "mysql:host=".$server.";dbname=".$database;
 
         try {
             // Check if the database connection is already declared
             if(isset(self::$DatabaseConnection)){
                 $this->dbConnection = self::$DatabaseConnection;
             }else{
-                $this->dbConnection = new PDO($dbConString, $dbUsername, $dbPassword);
+                $this->dbConnection = new PDO($conString, $username, $password);
                 $this->dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 self::$DatabaseConnection = $this->dbConnection;
