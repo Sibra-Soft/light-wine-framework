@@ -3,10 +3,11 @@ namespace LightWine\Modules\ConfigurationManager\Services;
 
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Modules\ConfigurationManager\Interfaces\IConfigurationManagerService;
 
 use \Exception;
 
-class ConfigurationManagerService
+class ConfigurationManagerService implements IConfigurationManagerService
 {
     private array $Settings = [];
 
@@ -33,7 +34,7 @@ class ConfigurationManagerService
      * @param string $name The name of the setting
      * @return string The value of the requested setting
      */
-    public function GetAppSetting(string $name, string $default = ""){
+    public function GetAppSetting(string $name, string $default = ""): string {
         if(array_key_exists($name, $this->Settings)){
             return $this->Settings[$name];
         }else{
@@ -47,21 +48,21 @@ class ConfigurationManagerService
      * @param string $keyValue
      * @return string
      */
-    public function ConnectionStrings(string $connectionStringName, string $keyValue = null){
-        $connectionProperties = [];
+    public function ConnectionStrings(string $connectionStringName, string $keyValue): string {
+        $stringArray = explode(";", $this->Settings["connections"][$connectionStringName]);
+        $returnValue = "";
 
-        if(StringHelpers::IsNullOrWhiteSpace($keyValue)){
-            return $this->Settings["connections"][$connectionStringName];
-        }else{
-            $properties = explode(";", $this->Settings["connections"][$connectionStringName]);
-
-            foreach($properties as $property){
-                $value = explode("=", $property);
-                $connectionProperties[$value[0]] = $value[1];
+        foreach($stringArray as $value){
+            if(StringHelpers::Contains($value, $keyValue)){
+                $returnValue = StringHelpers::SplitString($value, "=", 1);
             }
-
-            return $connectionProperties[$keyValue];
         }
+
+        if(StringHelpers::IsNullOrWhiteSpace($returnValue)){
+            throw new Exception("The specified connectionstring key could not be found: ".$keyValue);
+        }
+
+        return $returnValue;
     }
 }
 ?>

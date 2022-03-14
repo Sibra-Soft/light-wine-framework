@@ -1,15 +1,16 @@
 <?php
 namespace LightWine\Modules\Database\Services;
 
+use LightWine\Core\Helpers\Helpers;
+use LightWine\Modules\Database\Models\UploadBlobModel;
+use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\QueryBuilder\Services\QueryBuilderService;
 use LightWine\Modules\QueryBuilder\Enums\QueryExtenderEnum;
 use LightWine\Modules\QueryBuilder\Enums\QueryOperatorsEnum;
-use LightWine\Core\Helpers\Helpers;
-use LightWine\Modules\Database\Models\UploadBlobModel;
-use LightWine\Core\Helpers\HttpContextHelpers;
+use LightWine\Modules\Database\Interfaces\IDatabaseHelperService;
 
-class DatabaseHelperService {
+class DatabaseHelperService implements IDatabaseHelperService {
     private MysqlConnectionService $databaseConnection;
     private QueryBuilderService $queryBuilder;
 
