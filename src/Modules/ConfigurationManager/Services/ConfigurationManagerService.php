@@ -6,6 +6,7 @@ use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\ConfigurationManager\Interfaces\IConfigurationManagerService;
 
 use \Exception;
+use XMLDiff\DOM;
 
 class ConfigurationManagerService implements IConfigurationManagerService
 {
@@ -25,7 +26,10 @@ class ConfigurationManagerService implements IConfigurationManagerService
             throw new Exception("The specified application configuration file could not be found");
         }
 
-        $this->Settings = json_decode(Helpers::GetFileContent($configFile), true);
+        $badchar = array(chr(239), chr(187), chr(191));
+        $jsonString =  str_replace($badchar, '', Helpers::GetFileContent($configFile));
+
+        $this->Settings = json_decode($jsonString, true);
         $GLOBALS["Settings"] = $this->Settings;
     }
 
@@ -49,7 +53,7 @@ class ConfigurationManagerService implements IConfigurationManagerService
      * @return string
      */
     public function ConnectionStrings(string $connectionStringName, string $keyValue): string {
-        $stringArray = explode(";", $this->Settings["connections"][$connectionStringName]);
+        $stringArray = explode(";", $this->Settings["Connections"][$connectionStringName]);
         $returnValue = "";
 
         foreach($stringArray as $value){
