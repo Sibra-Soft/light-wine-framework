@@ -3,11 +3,12 @@ namespace LightWine;
 
 use LightWine\Core\Services\ServerService;
 use LightWine\Core\Services\RequestService;
-use LightWine\Core\Services\PreparationService;
+use LightWine\Core\Helpers\Helpers;
+use LightWine\Core\Helpers\StringHelpers;
 
 use \Exception;
-use TypeError;
-use Error;
+use \TypeError;
+use \Error;
 
 class Bootloader {
 	private function Autoloader(){
@@ -43,7 +44,21 @@ class Bootloader {
      * @param TypeError|Exception|Error $exception The thrown exception
      */
     public function SetExceptionHandler($exception){
-        echo("<strong>Exception</strong>: ".$exception->getMessage());
+        $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
+
+        $message = StringHelpers::SplitString($exception->getMessage(), "#", 0);
+        $specifiedSource = StringHelpers::SplitString($exception->getMessage(), "#", 1);
+
+        if(StringHelpers::IsNullOrWhiteSpace($specifiedSource)){
+            $specifiedSource = $exception->getCode();
+        }
+
+        $view = str_replace("{{source_file_line}}", $exception->getLine(), $view);
+        $view = str_replace("{{source_file}}", $exception->getFile(), $view);
+        $view = str_replace("{{error_message}}", $message, $view);
+        $view = str_replace("{{source}}", $specifiedSource, $view);
+
+        echo($view);
     }
 
     /**

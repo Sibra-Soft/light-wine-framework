@@ -31,10 +31,10 @@ class MysqlConnectionService implements IMysqlConnectionService {
         $this->config = new ConfigurationManagerService();
 
         // Get the settings for the connectionstring
-        $server = $this->config->ConnectionStrings("defaultConnectionString", "server");
-        $database = $this->config->ConnectionStrings("defaultConnectionString", "database");
-        $username = $this->config->ConnectionStrings("defaultConnectionString", "user");
-        $password = $this->config->ConnectionStrings("defaultConnectionString", "password");
+        $server = $this->config->ConnectionStrings("DefaultConnectionString", "server");
+        $database = $this->config->ConnectionStrings("DefaultConnectionString", "database");
+        $username = $this->config->ConnectionStrings("DefaultConnectionString", "user");
+        $password = $this->config->ConnectionStrings("DefaultConnectionString", "password");
         $conString = "mysql:host=".$server.";dbname=".$database;
 
         try {
@@ -208,13 +208,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
         }
         catch(PDOException $e)
         {
-            if($e->getMessage() !== "SQLSTATE[HY000]: General error"){
-                echo("<strong>Mysql error</strong><br />");
-                print_r($e->errorInfo[2]);
-                echo("<br /><br /><strong>Current Query</strong>");
-                echo('<pre>'.$queryToExecute.'</pre>');
-                exit();
-            }
+            if($e->getMessage() !== "SQLSTATE[HY000]: General error") throw new Exception($e->errorInfo[2]."#".$queryToExecute);
         }
 
         // Get the rowcount
