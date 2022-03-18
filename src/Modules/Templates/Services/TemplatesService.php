@@ -23,7 +23,7 @@ class TemplatesService implements ITemplatesService
      */
     private function PopulateModelFromDatabase(MysqlConnectionService $dbConnection){
         // Add the current environment as variable (options: `dev`, `test`, `live`)
-        $currentEnvironment = $this->settings->GetAppSetting("environment");
+        $currentEnvironment = $this->settings->GetAppSetting("Environment");
 
         $dbConnection->ClearParameters();
         $dbConnection->AddParameter("templateId", $this->returnModel->Id);

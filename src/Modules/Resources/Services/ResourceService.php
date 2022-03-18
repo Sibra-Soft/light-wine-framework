@@ -46,7 +46,7 @@ class ResourceService {
      */
     private function GenerateMasterpageFile($type){
         // Delete the cache on the development enviroment
-        if($this->settings->GetAppSetting("enviroment") == EnvironmentEnum::Development) $this->cacheService->ClearAllCache();
+        if($this->settings->GetAppSetting("Enviroment") == EnvironmentEnum::Development) $this->cacheService->ClearAllCache();
 
         if(file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js") and file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css")){
             $this->contentCSS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css");
