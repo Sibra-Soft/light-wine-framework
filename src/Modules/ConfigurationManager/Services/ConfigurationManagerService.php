@@ -6,7 +6,6 @@ use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\ConfigurationManager\Interfaces\IConfigurationManagerService;
 
 use \Exception;
-use XMLDiff\DOM;
 
 class ConfigurationManagerService implements IConfigurationManagerService
 {
