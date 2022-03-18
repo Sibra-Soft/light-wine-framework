@@ -22,7 +22,8 @@ Below you find a example of a configuration file for a website/webapplication cr
 
 ```json 
 {
-  "domain":"exmaple.com" // The main domain name of your website/webapplication,
+  "name": "Exmaple Project", // The name of the project
+  "domain": "exmaple.com", // The main domain name of your website/webapplication,
   "connections": {
     // Here you can add connectionstring of your databases
   },
