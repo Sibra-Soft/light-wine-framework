@@ -1,5 +1,5 @@
 <p align="center" >
-  <img src="https://www.moviedos.nl/images/light_wine_logo.png" style="width:128px;" />
+  <img src="https://www.sibra-soft.nl/images/light_wine_logo.png" style="width:128px;" />
 </p>
 
 # LightWine Framework
