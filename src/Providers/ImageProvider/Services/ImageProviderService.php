@@ -2,9 +2,10 @@
 namespace LightWine\Providers\ImageProvider\Services;
 
 use LightWine\Core\Models\PageModel;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
+use LightWine\Core\HttpResponse;
+use LightWine\Core\Helpers\RequestVariables;
 
 class ImageProviderService
 {
@@ -20,10 +21,10 @@ class ImageProviderService
      * @return string The data of the image
      */
     public function HandleImageRequest(PageModel $page): string {
-        $requestFilename = HttpContextHelpers::RequestVariable("filename");
+        $requestFilename = RequestVariables::Get("filename");
 
         if(StringHelpers::IsNullOrWhiteSpace($requestFilename)){
-            HttpContextHelpers::ShowError(404, "The requested file could not be found", "File not found");
+            HttpResponse::ShowError(404, "The requested file could not be found", "File not found");
         }else{
             $fileHash = sha1($requestFilename);
 
@@ -46,7 +47,7 @@ class ImageProviderService
                 if($this->databaseConnection->rowCount > 0){
                     if($this->databaseConnection->DatasetFirstRow("user_id", "integer") !== 0){
                         if($this->databaseConnection->DatasetFirstRow("user_id", "integer") !== $_SESSION["UserId"]){
-                            HttpContextHelpers::ShowError(403, "You don't have permission to access the requested content", "Forbidden");
+                            HttpResponse::ShowError(403, "You don't have permission to access the requested content", "Forbidden");
                         }
                     }
 
@@ -58,7 +59,7 @@ class ImageProviderService
                         return $row['content'];
                     }
                 }else{
-                    HttpContextHelpers::ShowError(404, "The requested file could not be found", "File not found");
+                    HttpResponse::ShowError(404, "The requested file could not be found", "File not found");
                 }
             }
         }

@@ -14,6 +14,7 @@ use LightWine\Providers\PartialProvider\Services\PartialProviderService;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Scheduler\Services\SchedulerService;
 use LightWine\Providers\Imdb\Services\ImdbApiProviderService;
+use LightWine\Core\Helpers\RequestVariables;
 
 class ServiceProviderService
 {
@@ -43,7 +44,7 @@ class ServiceProviderService
         $pageModel = new PageModel;
 
         switch ($requestUri) {
-            case "/resources.dll": $pageModel->Content = $this->GetResources(HttpContextHelpers::RequestVariable("filename"), HttpContextHelpers::RequestVariable("type"), (bool)HttpContextHelpers::RequestVariable("single")); break;
+            case "/resources.dll": $pageModel->Content = $this->GetResources(RequestVariables::Get("filename"), RequestVariables::Get("type"), (bool)RequestVariables::Get("single")); break;
             case "/images.dll": $pageModel->Content = $this->GetImage($pageModel); break;
             case "/template.dll": $pageModel->Content = $this->GetTemplate(); break;
             case "/component.dll": $pageModel->Content = $this->GetComponent(); break;
@@ -82,7 +83,7 @@ class ServiceProviderService
     }
 
     private function GetComponent(): string {
-        return $this->componentService->HandleRenderComponent(HttpContextHelpers::RequestVariable("name"));
+        return $this->componentService->HandleRenderComponent(RequestVariables::Get("name"));
     }
 
     private function GetJson(PageModel $page): string {
@@ -90,7 +91,7 @@ class ServiceProviderService
     }
 
     private function GetModule(): string {
-        $moduleResponse = $this->moduleProviderService->RunModule(HttpContextHelpers::RequestVariable("name"));
+        $moduleResponse = $this->moduleProviderService->RunModule(RequestVariables::Get("name"));
 
         if(StringHelpers::IsNullOrWhiteSpace($moduleResponse)){
             exit();
@@ -108,10 +109,10 @@ class ServiceProviderService
     }
 
     private function GetFromImdb(): string {
-        $searchMovieValue = HttpContextHelpers::RequestVariable("search-movie");
-        $searchSerieValue = HttpContextHelpers::RequestVariable("search-serie");
-        $titleId = HttpContextHelpers::RequestVariable("title");
-        $seasonNr = HttpContextHelpers::RequestVariable("season");
+        $searchMovieValue = RequestVariables::Get("search-movie");
+        $searchSerieValue = RequestVariables::Get("search-serie");
+        $titleId = RequestVariables::Get("title");
+        $seasonNr = RequestVariables::Get("season");
 
         header('Content-Type: application/json; charset=utf-8');
         if(!StringHelpers::IsNullOrWhiteSpace($searchMovieValue)){

@@ -3,8 +3,9 @@ namespace LightWine\Providers\TemplateProvider\Services;
 
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templating\Services\TemplatingService;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Core\Helpers\RequestVariables;
+use LightWine\Core\HttpResponse;
 
 class TemplateProviderService
 {
@@ -17,9 +18,9 @@ class TemplateProviderService
     }
 
     public function HandleTemplateRequest(): string {
-        $templateName = HttpContextHelpers::RequestVariable("templatename");
+        $templateName = RequestVariables::Get("templatename");
 
-        if(StringHelpers::IsNullOrWhiteSpace($templateName)) HttpContextHelpers::ShowError(404, "Not found", "Template could not be found");
+        if(StringHelpers::IsNullOrWhiteSpace($templateName)) HttpResponse::ShowError(404, "Not found", "Template could not be found");
 
         $template = $this->templateService->GetTemplateByName($templateName);
         $template = $this->templatingService->RenderTemplateAndDoAllReplacements($template->Id);

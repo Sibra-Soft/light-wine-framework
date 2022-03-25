@@ -1,8 +1,9 @@
 <?php
 namespace LightWine\Components\DeviceVerification;
+
 use LightWine\Components\ComponentBase;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
+use LightWine\Core\Helpers\RequestVariables;
 
 class DeviceVerification {
     private int $controlId = 0;
@@ -16,7 +17,7 @@ class DeviceVerification {
     }
 
     private function ConfirmDeviceVerification(){
-        $deviceCode = HttpContextHelpers::RequestVariable("device");
+        $deviceCode = RequestVariables::Get("device");
 
         $this->databaseConnection->ClearParameters();
         $this->databaseConnection->AddParameter("deviceCode", $deviceCode);

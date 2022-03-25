@@ -1,9 +1,10 @@
 <?php
 namespace LightWine\Providers\PartialProvider\Services;
 
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Core\HttpResponse;
+use LightWine\Core\Helpers\RequestVariables;
 
 use Rct567\DomQuery\DomQuery;
 
@@ -15,8 +16,8 @@ class PartialProviderService {
     }
 
     public function HandlePartialRequest(): string {
-        $templateId = HttpContextHelpers::RequestVariable("template");
-        $partialName = HttpContextHelpers::RequestVariable("name");
+        $templateId = RequestVariables::Get("template");
+        $partialName = RequestVariables::Get("name");
 
         // Get and render the template
         $templateContent = $this->templatingService->RenderTemplateAndDoAllReplacements($templateId);
@@ -26,7 +27,7 @@ class PartialProviderService {
         $partialContent = $domQuery->find("div[data-type='template'][data-name='$partialName']")->getInnerHtml();
 
         if(StringHelpers::IsNullOrWhiteSpace($partialContent)){
-            HttpContextHelpers::ShowError(400, "The specified partial could not be found in the specified template", "Partial not found");
+            HttpResponse::ShowError(400, "The specified partial could not be found in the specified template", "Partial not found");
         }else{
             return $partialContent;
         }

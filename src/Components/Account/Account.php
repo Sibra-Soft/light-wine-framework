@@ -3,8 +3,8 @@ namespace LightWine\Components\Account;
 
 use LightWine\Components\ComponentBase;
 use LightWine\Core\Helpers\Helpers;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Core\Helpers\RequestVariables;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Sam\Models\SamLoginResponseModel;
 use LightWine\Modules\Communication\Services\MailService;
@@ -46,7 +46,7 @@ class Account {
     }
 
     private function HandleDeleteAccount(){
-        
+
     }
 
     /**
@@ -68,10 +68,10 @@ class Account {
 
     private function HandleCreateMode(){
         if($_SERVER['REQUEST_METHOD'] == RequestMethodesEnum::POST){
-            $requestUsername = HttpContextHelpers::RequestVariable("account-username");
-            $requestPassword = HttpContextHelpers::RequestVariable("account-password");
-            $requestPasswordConfirm = HttpContextHelpers::RequestVariable("account-password-repeat");
-            $requestFullname = HttpContextHelpers::RequestVariable("account-fullname");
+            $requestUsername = RequestVariables::Get("account-username");
+            $requestPassword = RequestVariables::Get("account-password");
+            $requestPasswordConfirm = RequestVariables::Get("account-password-repeat");
+            $requestFullname = RequestVariables::Get("account-fullname");
 
             if($requestPassword !== $requestPasswordConfirm){
 
@@ -129,7 +129,7 @@ class Account {
 
     private function HandleConfirmMode(){
         $this->databaseConnection->ClearParameters();
-        $this->databaseConnection->AddParameter("hash", HttpContextHelpers::RequestVariable("token"));
+        $this->databaseConnection->AddParameter("hash", RequestVariables::Get("token"));
         $this->databaseConnection->GetDataset("SELECT `id` FROM `_users` WHERE confirm_hash = ?hash LIMIT 1;");
 
         if($this->databaseConnection->rowCount > 0){
@@ -148,16 +148,16 @@ class Account {
         // Check if the current request is a Post request
         if($_SERVER['REQUEST_METHOD'] == RequestMethodesEnum::POST){
             // Check if we want to use a login provider
-            switch(HttpContextHelpers::RequestVariable("signin")){
+            switch(RequestVariables::Get("signin")){
                 case "linkedin": $this->HandleLoginWithLinkedIn(); break;
                 case "google": $this->HandleLoginWithGoogle(); break;
             }
 
-            $username = HttpContextHelpers::RequestVariable("login-username");
-            $password = HttpContextHelpers::RequestVariable("login-password");
+            $username = RequestVariables::Get("login-username");
+            $password = RequestVariables::Get("login-password");
 
             // Check if the user want's to be keeped loggedin
-            if(StringHelpers::IsNullOrWhiteSpace(HttpContextHelpers::RequestVariable("keep-me-loggedin"))){
+            if(StringHelpers::IsNullOrWhiteSpace(RequestVariables::Get("keep-me-loggedin"))){
                 setcookie("keep-me-loggedin", 0, 0);
             }else{
                 setcookie("keep-me-loggedin", 1, 0);
@@ -203,7 +203,7 @@ class Account {
         $mainTemplate = $this->component->MainTemplate;
 
         if($_SERVER['REQUEST_METHOD'] == RequestMethodesEnum::POST){
-            $username = HttpContextHelpers::RequestVariable("login-username");
+            $username = RequestVariables::Get("login-username");
 
             // Get the userId from the specified username
             $this->databaseConnection->ClearParameters();

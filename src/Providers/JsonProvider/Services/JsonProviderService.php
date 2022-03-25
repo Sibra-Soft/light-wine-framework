@@ -4,8 +4,9 @@ namespace LightWine\Providers\JsonProvider\Services;
 use LightWine\Core\Models\PageModel;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Templates\Services\TemplatesService;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Modules\Templating\Services\TemplatingService;
+use LightWine\Core\HttpResponse;
+use LightWine\Core\Helpers\RequestVariables;
 
 class JsonProviderService {
     private MysqlConnectionService $databaseConnection;
@@ -19,11 +20,11 @@ class JsonProviderService {
     }
 
     public function HandleJsonRequest(PageModel $page){
-        if(HttpContextHelpers::RequestVariable("csrf_token") !== $_SESSION["CsrfToken"]){
-            HttpContextHelpers::ShowError(403, "You do not have permission to access the requested content", "Access denied");
+        if(RequestVariables::Get("csrf_token") !== $_SESSION["CsrfToken"]){
+            HttpResponse::ShowError(403, "You do not have permission to access the requested content", "Access denied");
         }
 
-        $template = $this->templateService->GetTemplateByName(HttpContextHelpers::RequestVariable("templatename"), "sql");
+        $template = $this->templateService->GetTemplateByName(RequestVariables::Get("templatename"), "sql");
 
         $this->templatingService->AddTemplatingVariablesToStore();
         $queryTemplate = $this->templatingService->ReplaceVariablesFromStore($template->Content);

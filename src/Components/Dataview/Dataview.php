@@ -3,11 +3,11 @@ namespace LightWine\Components\Dataview;
 
 use LightWine\Components\ComponentBase;
 use LightWine\Modules\Templating\Services\TemplatingService;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Components\Dataview\Models\DataviewComponentModel;
+use LightWine\Core\Helpers\RequestVariables;
 
 class Dataview {
     private int $PageCount = 1;
@@ -27,7 +27,7 @@ class Dataview {
     }
 
     private function RenderFiltersInQuery(TemplatingService $templating){
-        $filters = json_decode(stripslashes(HttpContextHelpers::RequestVariable("filters")), true);
+        $filters = json_decode(stripslashes(RequestVariables::Get("filters")), true);
 
         foreach($filters as $filter){
             $fieldName = $filter["field"];
@@ -102,8 +102,8 @@ class Dataview {
         if($this->component->EnablePagination) $this->GetPageCountFromQuery($this->databaseConnection);
 
         // Render the query if a page number is specified
-        $pageNr = (int)HttpContextHelpers::RequestVariable("page", 1);
-        if(HttpContextHelpers::RequestVariable("page")){
+        $pageNr = (int)RequestVariables::Get("page", 1);
+        if(RequestVariables::Get("page")){
             $queryTemplate = $this->GenerateQueryLimit($queryTemplate, $pageNr);
         }
 

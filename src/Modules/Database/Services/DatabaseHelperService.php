@@ -3,12 +3,12 @@ namespace LightWine\Modules\Database\Services;
 
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\Database\Models\UploadBlobModel;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\QueryBuilder\Services\QueryBuilderService;
 use LightWine\Modules\QueryBuilder\Enums\QueryExtenderEnum;
 use LightWine\Modules\QueryBuilder\Enums\QueryOperatorsEnum;
 use LightWine\Modules\Database\Interfaces\IDatabaseHelperService;
+use LightWine\Core\Helpers\RequestVariables;
 
 class DatabaseHelperService implements IDatabaseHelperService {
     private MysqlConnectionService $databaseConnection;
@@ -145,14 +145,14 @@ class DatabaseHelperService implements IDatabaseHelperService {
         $image = file_get_contents($uploadModel->File);
 
         // Add the details to the upload model
-        $uploadModel->ItemId = (int)HttpContextHelpers::RequestVariable("item_id", 0);
+        $uploadModel->ItemId = (int)RequestVariables::Get("item_id", 0);
         $uploadModel->FileSize = filesize($uploadModel->File);
         $uploadModel->MimeType = Helpers::GetMimeType($uploadModel->File);
-        $uploadModel->ObjectType = HttpContextHelpers::RequestVariable("type");
+        $uploadModel->ObjectType = RequestVariables::Get("type");
         $uploadModel->ImageWidth = getimagesize($uploadModel->File)[0];
         $uploadModel->ImageHeight = getimagesize($uploadModel->File)[1];
         $uploadModel->Extension = strtolower(pathinfo($uploadModel->File, PATHINFO_EXTENSION));
-        $uploadModel->ParentFolder = (int)HttpContextHelpers::RequestVariable("parent_folder");
+        $uploadModel->ParentFolder = (int)RequestVariables::Get("parent_folder");
 
         // Add the parameters to the database connection
         $this->databaseConnection->ClearParameters();
