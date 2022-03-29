@@ -10,7 +10,6 @@ use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templates\Models\TemplateModel;
 use LightWine\Modules\Cache\Services\CacheService;
-use LightWine\Core\Enums\EnvironmentEnum;
 
 class ResourceService {
     private string $contentJS = "";
@@ -45,9 +44,6 @@ class ResourceService {
      * @return string
      */
     private function GenerateMasterpageFile($type){
-        // Delete the cache on the development enviroment
-        if($this->settings->GetAppSetting("Enviroment") == EnvironmentEnum::Development) $this->cacheService->ClearAllCache();
-
         if(file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js") and file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css")){
             $this->contentCSS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css");
             $this->contentJS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js");
@@ -55,7 +51,7 @@ class ResourceService {
             Helpers::CreateFolderIfNotExists("cache/external/");
 
             // Check if a external content template has been specified
-            $currentEnvironment = $this->settings->GetAppSetting("environment");
+            $currentEnvironment = $this->settings->GetAppSetting("Environment");
 
             $this->DownloadFromDeploymentServer();
 
@@ -117,7 +113,7 @@ class ResourceService {
             $filename = $this->templateService->GetTemplateByName($filename, $type)->Id;
         }
 
-        $currentCacheFolder = $this->settings->GetAppSetting("cache_folder", "/cache/");
+        $currentCacheFolder = $this->settings->GetAppSetting("CacheFolder", "/cache/");
         $cacheFilename = $_SERVER["DOCUMENT_ROOT"].$currentCacheFolder.$filename;
 
         // Create the cache folder if it not exists
