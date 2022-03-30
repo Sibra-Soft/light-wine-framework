@@ -4,7 +4,6 @@ namespace LightWine\Modules\ServiceProvider\Services;
 use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Modules\Resources\Services\ResourceService;
 use LightWine\Core\Models\PageModel;
-use LightWine\Providers\ImageProvider\Services\ImageProviderService;
 use LightWine\Providers\TemplateProvider\Services\TemplateProviderService;
 use LightWine\Core\Services\ComponentsService;
 use LightWine\Providers\JsonProvider\Services\JsonProviderService;
@@ -15,10 +14,12 @@ use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Scheduler\Services\SchedulerService;
 use LightWine\Providers\Imdb\Services\ImdbApiProviderService;
 use LightWine\Core\Helpers\RequestVariables;
+use LightWine\Modules\Files\Services\ImageFileService;
+use LightWine\Core\HttpResponse;
 
 class ServiceProviderService
 {
-    private ImageProviderService $imageProviderService;
+    private ImageFileService $imageFileService;
     private TemplateProviderService $templateProviderService;
     private ComponentsService $componentService;
     private JsonProviderService $jsonProviderService;
@@ -29,7 +30,6 @@ class ServiceProviderService
     private ImdbApiProviderService $imdbProviderService;
 
     public function __construct(){
-        $this->imageProviderService = new ImageProviderService();
         $this->templateProviderService = new TemplateProviderService();
         $this->componentService = new ComponentsService();
         $this->jsonProviderService = new JsonProviderService();
@@ -38,6 +38,7 @@ class ServiceProviderService
         $this->apiService = new ApiService();
         $this->scheduler = new SchedulerService();
         $this->imdbProviderService = new ImdbApiProviderService();
+        $this->imageFileService = new ImageFileService();
     }
 
     public function CheckForServiceRequest($requestUri): PageModel {
@@ -45,7 +46,7 @@ class ServiceProviderService
 
         switch ($requestUri) {
             case "/resources.dll": $pageModel->Content = $this->GetResources(RequestVariables::Get("filename"), RequestVariables::Get("type"), (bool)RequestVariables::Get("single")); break;
-            case "/images.dll": $pageModel->Content = $this->GetImage($pageModel); break;
+            case "/images.dll": $this->GetImage(); break;
             case "/template.dll": $pageModel->Content = $this->GetTemplate(); break;
             case "/component.dll": $pageModel->Content = $this->GetComponent(); break;
             case "/logoff.dll": HttpContextHelpers::Logoff(); break;
@@ -74,8 +75,26 @@ class ServiceProviderService
         return $resources->GetResourcesBasedOnFilename($filename, $type, $single);
     }
 
-    private function GetImage(PageModel $page): string {
-        return $this->imageProviderService->HandleImageRequest($page);
+    private function GetImage(){
+        $filename = RequestVariables::Get("filename");
+        $image = $this->imageFileService->GetImageByName($filename);
+
+        if(!$image->Found){
+            HttpResponse::ShowError(404, "The requested file could not be found", "File not found");
+        }
+
+        if(!$image->Permission){
+            HttpResponse::ShowError(403, "You don't have permission to access the requested content", "Forbidden");
+        }
+
+        HttpResponse::SetHeader("pragma", "public");
+        HttpResponse::SetHeader("Cache-Control", "max-age=86400");
+        HttpResponse::SetHeader("Expires", gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+
+        HttpResponse::SetContentType($image->ContentType);
+
+        echo($image->FileData);
+        exit();
     }
 
     private function GetTemplate(): string {
