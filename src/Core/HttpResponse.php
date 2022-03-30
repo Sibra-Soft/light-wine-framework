@@ -31,7 +31,7 @@ class HttpResponse
      * @param mixed $value The value of the header entry to add
      * @param bool $replace Must the value be replaced if it already exists
      */
-    public static function SetHeader(string $name, mixed $value, bool $replace = true){
+    public static function SetHeader(string $name, string $value, bool $replace = true){
         header($name.":".$value);
     }
 
