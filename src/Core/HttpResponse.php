@@ -2,9 +2,17 @@
 namespace LightWine\Core;
 
 use LightWine\Core\Helpers\Helpers;
+use LightWine\Core\Helpers\HttpContextHelpers;
 
 class HttpResponse
 {
+    public static bool $MinifyHtml = true;
+
+    /**
+     * Adds a cookie to the current response
+     * @param string $name The name of the cookie
+     * @param string $value The value of the cookie
+     */
     public static function SetCookie(string $name, string $value){
 
     }
@@ -19,10 +27,14 @@ class HttpResponse
 
     /**
      * Set data to send back as response
-     * @param mixed $data The data to send as response
+     * @param string $data The data to send as response
      */
-    public static function SetData(mixed $data){
-        echo($data);
+    public static function SetData(string $data){
+        if(self::$MinifyHtml){
+            echo(HttpContextHelpers::MinifyHtml($data));
+        }else{
+            echo($data);
+        }
     }
 
     /**
