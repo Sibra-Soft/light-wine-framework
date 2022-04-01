@@ -9,6 +9,7 @@ use LightWine\Core\Helpers\StringHelpers;
 use \Exception;
 use \TypeError;
 use \Error;
+use LightWine\Core\HttpResponse;
 
 class Bootloader {
 	private function Autoloader(){
@@ -58,7 +59,8 @@ class Bootloader {
         $view = str_replace("{{error_message}}", $message, $view);
         $view = str_replace("{{source}}", $specifiedSource, $view);
 
-        echo($view);
+        HttpResponse::SetContentType("text/html");
+        HttpResponse::SetData($view);
     }
 
     /**
@@ -78,16 +80,14 @@ class Bootloader {
 
         $this->Autoloader();
 
-        //$prep = new PreparationService();
-        //$prep->RunSetup();
-
         $request = new RequestService();
         $requestModel = $request->GetRouteBasedOnRequestUrl();
 
         $server = new ServerService($requestModel);
         $responseModel = $server->Start();
 
-        echo($responseModel->Page->Content);
+        HttpResponse::SetContentType("text/html");
+        HttpResponse::SetData($responseModel->Page->Content);
     }
 }
 ?>

@@ -6,10 +6,10 @@ use LightWine\Core\Models\ResponseModel;
 use LightWine\Core\Enums\RouteTypeEnum;
 use LightWine\Modules\ServiceProvider\Services\ServiceProviderService;
 use LightWine\Modules\Api\Services\ApiService;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\Interfaces\IServerService;
 use LightWine\Modules\Logger\Services\LoggerService;
+use LightWine\Core\HttpResponse;
 
 class ServerService implements IServerService
 {
@@ -38,7 +38,7 @@ class ServerService implements IServerService
             $responseModel->Page = $this->serviceProviderService->CheckForServiceRequest($this->request->RequestUrl);
 
             if(StringHelpers::IsNullOrWhiteSpace($responseModel->Page->Content)){
-                HttpContextHelpers::ShowError(404, "Not found", "The specified content could not be found");
+                HttpResponse::ShowError(404, "Not found", "The specified content could not be found");
             }
         }else{
             switch($this->request->Route->Type){
