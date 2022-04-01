@@ -5,19 +5,20 @@ use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
-use LightWine\Modules\Templates\Services\MinifierService;
 use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templates\Models\TemplateModel;
 use LightWine\Modules\Cache\Services\CacheService;
+use LightWine\Core\Helpers\HttpContextHelpers;
+use LightWine\Modules\Resources\Interfaces\IResourceService;
+use LightWine\Modules\Resources\Enums\ResourceTypeEnum;
 
-class ResourceService {
+class ResourceService implements IResourceService {
     private string $contentJS = "";
     private string $contentCSS = "";
 
     private MysqlConnectionService $databaseConnection;
     private ConfigurationManagerService $settings;
-    private MinifierService $minifierService;
     private TemplatingService $templatingService;
     private TemplatesService $templateService;
     private CacheService $cacheService;
@@ -25,7 +26,6 @@ class ResourceService {
     public function __construct(){
         $this->databaseConnection = new MysqlConnectionService();
         $this->settings = new ConfigurationManagerService();
-        $this->minifierService = new MinifierService();
         $this->templatingService = new TemplatingService();
         $this->templateService = new TemplatesService();
         $this->cacheService = new CacheService();
@@ -71,7 +71,7 @@ class ResourceService {
                 if($row["type"] === "javascript"){
                     $content = $this->templatingService->ReplaceContent($row["content"]);
 
-                    $this->contentJS .= $this->minifierService->MinifyJavascript($content);
+                    $this->contentJS .= HttpContextHelpers::MinifyJavascript($content);
                 }else{
                     $this->contentCSS .= $row["content"];
                 }
@@ -81,32 +81,24 @@ class ResourceService {
                 file_put_contents($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js", $this->contentJS);
             }
             if(!file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css")){
-                $this->contentCSS = $this->minifierService->MinifyStylesheet($this->contentCSS);
+                $this->contentCSS = HttpContextHelpers::MinifyStylesheet($this->contentCSS);
                 file_put_contents($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css", $this->contentCSS);
             }
         }
 
-        if($type === "javascript"){
-            header('Pragma: public');
-            header('Cache-Control: max-age=86400');
-            header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
-            header("Content-Type: application/javascript", true);
-
+        if($type == ResourceTypeEnum::JS){
             return $this->contentJS;
         }else{
-            header('Pragma: public');
-            header('Cache-Control: max-age=86400');
-            header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
-            header("Content-Type: text/css", true);
-
             return $this->contentCSS;
         }
     }
 
     /**
      * This function gets the resources based on the specified filename
-     * @param string $filename
-     * @return string
+     * @param string $filename The filename of the resource
+     * @param string $type The type of resource (javascript or stylesheet)
+     * @param bool $singleFileRequest Tells if this is a request for a single file
+     * @return string The content of the request resource(s)
      */
     public function GetResourcesBasedOnFilename(string $filename, string $type, bool $singleFileRequest){
         if($singleFileRequest){
@@ -149,13 +141,11 @@ class ResourceService {
             $returnContent = Helpers::GetFileContent($cacheFilename);
         }
 
-        if($type === "css"){
-            header("Content-Type: text/css", true);
-            return $this->minifierService->MinifyStylesheet($returnContent);
+        if($type === ResourceTypeEnum::CSS){
+            return HttpContextHelpers::MinifyStylesheet($returnContent);
         }else{
-            header("Content-Type: application/javascript", true);
             $returnContent = $this->templatingService->ReplaceContent($returnContent);
-            return $this->minifierService->MinifyJavascript($returnContent);
+            return HttpContextHelpers::MinifyJavascript($returnContent);
         }
     }
 

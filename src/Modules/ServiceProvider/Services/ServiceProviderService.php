@@ -16,6 +16,7 @@ use LightWine\Providers\Imdb\Services\ImdbApiProviderService;
 use LightWine\Core\Helpers\RequestVariables;
 use LightWine\Modules\Files\Services\ImageFileService;
 use LightWine\Core\HttpResponse;
+use LightWine\Modules\Resources\Enums\ResourceTypeEnum;
 
 class ServiceProviderService
 {
@@ -45,7 +46,7 @@ class ServiceProviderService
         $pageModel = new PageModel;
 
         switch ($requestUri) {
-            case "/resources.dll": $pageModel->Content = $this->GetResources(RequestVariables::Get("filename"), RequestVariables::Get("type"), (bool)RequestVariables::Get("single")); break;
+            case "/resources.dll": $this->GetResources(RequestVariables::Get("filename"), RequestVariables::Get("type"), (bool)RequestVariables::Get("single")); break;
             case "/images.dll": $this->GetImage(); break;
             case "/template.dll": $pageModel->Content = $this->GetTemplate(); break;
             case "/component.dll": $pageModel->Content = $this->GetComponent(); break;
@@ -70,14 +71,26 @@ class ServiceProviderService
      * @param string $type
      * @param bool $single
      */
-    private function GetResources(string $filename, string $type, bool $single): string {
+    private function GetResources(string $filename, string $type, bool $single){
         $resources = new ResourceService();
-        return $resources->GetResourcesBasedOnFilename($filename, $type, $single);
+        $resourceContent = $resources->GetResourcesBasedOnFilename($filename, $type, $single);
+
+        HttpResponse::SetHeader("Pragma", "public");
+        HttpResponse::SetHeader("Cache-Control", "max-age=86400");
+        HttpResponse::SetHeader("Expires", gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+
+        if($type == ResourceTypeEnum::CSS) HttpResponse::SetContentType("text/css");
+        if($type == ResourceTypeEnum::JS) HttpResponse::SetContentType("application/javascript");
+
+        HttpResponse::SetData($resourceContent);
+        exit();
     }
 
     private function GetImage(){
         $filename = RequestVariables::Get("filename");
         $image = $this->imageFileService->GetImageByName($filename);
+
+        HttpResponse::$MinifyHtml = false;
 
         if(!$image->Found){
             HttpResponse::ShowError(404, "The requested file could not be found", "File not found");
@@ -92,8 +105,7 @@ class ServiceProviderService
         HttpResponse::SetHeader("Expires", gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
 
         HttpResponse::SetContentType($image->ContentType);
-
-        echo($image->FileData);
+        HttpResponse::SetData($image->FileData);
         exit();
     }
 
