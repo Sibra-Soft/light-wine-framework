@@ -2,9 +2,21 @@
 namespace LightWine\Core\Helpers;
 
 use \DateTime;
-use \ReflectionClass;
 
 class Helpers {
+    /**
+     * Gets the absolute path of a specified file on the server
+     * @param string $path The path you want to make absolute
+     * @return string The new path inclusing the necessary path information
+     */
+    public static function MapPath(string $path): string {
+        $path = str_replace("~", dirname(__FILE__, 3), $path);
+        $path = str_replace("/src/src/", "/src/", $path);
+        $path = str_replace("\src/src/", "/src/", $path);
+
+        return $path;
+    }
+
     /**
      * Generate a pincode with four decimals
      * @return int
@@ -68,50 +80,11 @@ class Helpers {
     }
 
     /**
-     * Get the difference of two dates in hours
-     * @param DateTime $date1
-     * @param DateTime $date2
-     * @return integer
-     */
-    public static function DateDiffInHours(DateTime $date1, DateTime $date2){
-        $interval = $date1->diff($date2);
-
-        if($interval->format('%a') > 0){
-            $hour1 = $interval->format('%a')*24;
-        }
-        if($interval->format('%h') > 0){
-            $hour2 = $interval->format('%h');
-        }
-
-        return ($hour1 + $hour2);
-    }
-
-    /**
      * Get the current date as timestamp
      * @return DateTime
      */
     public static function Now(){
         return new DateTime("now");
-    }
-
-    /**
-     * Get the current active session on the server, function is writen for Neostrada servers
-     * @return array
-     */
-    public static function GetActiveSessions(){
-        $sessions = [];
-
-        $sessionDir = session_save_path();
-
-        if(stringhelpers::IsNullOrWhiteSpace($sessionDir)){
-            $sessionDir = sys_get_temp_dir();
-        }
-
-        foreach(glob($sessionDir ."\sess_*") as $session){
-            array_push($sessions, str_replace($sessionDir ."\sess_", "", $session));
-        }
-
-        return $sessions;
     }
 
     /**
@@ -156,9 +129,7 @@ class Helpers {
     public static function GetFileContent($filename){
         $content = "";
 
-        $filename = str_replace("~", dirname(__FILE__, 3), $filename);
-        $filename = str_replace("/src/src/", "/src/", $filename);
-        $filename = str_replace("\src/src/", "/src/", $filename);
+        $filename = self::MapPath($filename);
 
         $myfile = fopen($filename, "r") or die("Unable to open file: ".$filename);
         $content = fread($myfile, filesize($filename));
@@ -191,18 +162,6 @@ class Helpers {
 
         // Save the file to the server
         file_put_contents($filename, $data);
-    }
-
-    /**
-     * Gets a specified part of a path
-     * @param string $path
-     * @param string $extractionType
-     * @return string
-     */
-    public static function PathParts($path, $extractionType){
-        $pathParts = pathinfo($path);
-
-        return $pathParts[$extractionType];
     }
 
     /**
