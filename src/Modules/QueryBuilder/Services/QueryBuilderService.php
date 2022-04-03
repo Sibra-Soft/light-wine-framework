@@ -3,8 +3,9 @@ namespace LightWine\Modules\QueryBuilder\Services;
 
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\QueryBuilder\Enums\QueryOperatorsEnum;
+use LightWine\Modules\QueryBuilder\Interfaces\IQueryBuilderService;
 
-class QueryBuilderService
+class QueryBuilderService implements IQueryBuilderService
 {
     protected $queryConstructor = [];
 
