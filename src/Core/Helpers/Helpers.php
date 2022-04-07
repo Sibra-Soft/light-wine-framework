@@ -11,6 +11,7 @@ class Helpers {
      */
     public static function MapPath(string $path): string {
         $path = str_replace("~", dirname(__FILE__, 3), $path);
+        $path = str_replace("..", $_SERVER["DOCUMENT_ROOT"], $path);
         $path = str_replace("/src/src/", "/src/", $path);
         $path = str_replace("\src/src/", "/src/", $path);
 
