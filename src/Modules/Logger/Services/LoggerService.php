@@ -20,7 +20,7 @@ class LoggerService
      * Call this function to log the current website visitor
      */
     public function LogSiteVisitor(){
-        $logFolder = $_SERVER["DOCUMENT_ROOT"]."/logs/traffic/";
+        $logFolder = Helpers::MapPath("../logs/traffic/");
 
         $logEntry = Helpers::Now()->format("Y-m-d h:i:s").";";
         $logEntry .= $_SERVER['REQUEST_METHOD'].";";
@@ -32,8 +32,8 @@ class LoggerService
         $logEntry .= DeviceHelpers::DeviceType().";";
         $logEntry .= $_SERVER["REQUEST_URI"].";";
         $logEntry .= DeviceHelpers::UserAgent();
-        
-        file_put_contents($logFolder."/test.log", $logEntry . "\n", FILE_APPEND);
+
+        file_put_contents($logFolder."test.log", $logEntry . "\n", FILE_APPEND);
     }
 
     /**
@@ -43,7 +43,7 @@ class LoggerService
      * @param string $category The category of the log entry
      */
     private function Log(string $logLevel, string $message, string $category, int $id){
-        $logFolder = $_SERVER["DOCUMENT_ROOT"]."/logs/traffic/";
+        $logFolder = Helpers::MapPath("../logs/");
 
         $logEntry = "";
         $logEntry .= $logLevel;
@@ -51,7 +51,7 @@ class LoggerService
         $logEntry .= $category;
         $logEntry .= $id;
 
-        file_put_contents($logFolder."/debug.log"."\n", FILE_APPEND);
+        file_put_contents($logFolder."debug.log"."\n", $logEntry, FILE_APPEND);
     }
 
     public function LogDebug(string $message, string $category = "general", $id = 0){
