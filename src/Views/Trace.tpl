@@ -1,3 +1,6 @@
+<?php
+use LightWine\Core\Helpers\TraceHelpers;
+?>
 <style type="text/css">
     span.tracecontent b{color:#fff}span.tracecontent{background-color:#fff;color:#000;font:10pt verdana,arial}span.tracecontent table{clear:left;font:10pt verdana,arial;cellspacing:0;cellpadding:0;margin-bottom:25}span.tracecontent tr.subhead{background-color:#ccc}span.tracecontent th{padding:0,3,0,3}span.tracecontent th.alt{background-color:#000;color:#fff;padding:3,3,2,3}span.tracecontent td{color:#000;padding:0,3,0,3;text-align:left}span.tracecontent td.err{color:red}span.tracecontent tr.alt{background-color:#eee}span.tracecontent h1{font:24pt verdana,arial;margin:0,0,0,0}span.tracecontent h2{font:18pt verdana,arial;margin:0,0,0,0}span.tracecontent h3{font:12pt verdana,arial;margin:0,0,0,0}span.tracecontent th a{color:#00008b;font:8pt verdana,arial}span.tracecontent a{color:#00008b;text-decoration:none}span.tracecontent a:hover{color:#00008b;text-decoration:underline}span.tracecontent div.outer{width:90%;margin:15,15,15,15}span.tracecontent table.viewmenu td{background-color:#069;color:#fff;padding:0,5,0,5}span.tracecontent table.viewmenu td.end{padding:0,0,0,0}span.tracecontent table.viewmenu a{color:#fff;font:8pt verdana,arial}span.tracecontent table.viewmenu a:hover{color:#fff;font:8pt verdana,arial}span.tracecontent a.tinylink{color:#00008b;background-color:#000;font:8pt verdana,arial;text-decoration:underline}span.tracecontent a.link{color:#00008b;text-decoration:underline}span.tracecontent div.buffer{padding-top:7;padding-bottom:17}span.tracecontent .small{font:8pt verdana,arial}span.tracecontent table td{padding-right:20}span.tracecontent table td.nopad{padding-right:5}
 </style>
@@ -14,7 +17,8 @@
         <tr align="left">
             <th>Session Id:</th>
             <td>
-                <?php echo(session_id()); ?>
+                <?php 
+                echo(session_id()); ?>
             </td>
             <th>Request Type:</th>
             <td>
@@ -51,15 +55,14 @@
         <tr class="subhead" align="left">
             <th>Category</th>
             <th>Message</th>
-            <th>From First(s)</th>
-            <th>From Last(s)</th>
+            <th>Timestamp</th>
         </tr>
         <?php
         $i = 0;
-        foreach ($GLOBALS['StackTrace'] as $Key => $Value) {
+        foreach (TraceHelpers::$tracing as $trace) {
             $Value = explode("#", $Value);
 
-            if($Value[4] == "true"){
+            if($trace["warn"]){
                 $style = 'style="color:red;"';
             }else{
                 $style = '';
@@ -70,10 +73,9 @@
             }else{
                 echo ('<tr class="alt" >');
             }
-            echo ('<td '.$style.'>'.$Value[0].'</td>');
-            echo ('<td '.$style.'>'.$Value[1].'</td>');
-            echo ('<td '.$style.'>'.$Value[2].'</td>');
-            echo ('<td '.$style.'>'.$Value[3].'</td>');
+            echo ('<td '.$style.'>'.$trace["category"].'</td>');
+            echo ('<td '.$style.'>'.$trace["message"].'</td>');
+            echo ('<td '.$style.'>'.$trace["timestamp"].'</td>');
             echo ('</tr>');
         }
         ?>
