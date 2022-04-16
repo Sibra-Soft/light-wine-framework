@@ -2,14 +2,16 @@
 namespace LightWine;
 
 use LightWine\Core\Services\ServerService;
-use LightWine\Core\Services\RequestService;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Core\HttpResponse;
+use LightWine\Modules\Tracing\Services\TracingService;
 
 use \Exception;
 use \TypeError;
 use \Error;
-use LightWine\Core\HttpResponse;
+use \DateInterval;
+use LightWine\Core\Route;
 
 class Bootloader {
 	private function Autoloader(){
@@ -27,6 +29,37 @@ class Bootloader {
             $includeFile = __DIR__.str_replace('\\', '/', str_replace("LightWine", "", $class)).'.'.$type.'.php';
             require_once ($includeFile);
         });
+    }
+
+    /**
+     * Runs before request handeling
+     */
+    private function BeforeRequest(){
+        // Add build-in framework routes
+        Route::WebMethod("/template.dll", "TemplateServiceProvider", []);
+        Route::WebMethod("/imdb.dll", "ImageServiceProvider", []);
+        Route::WebMethod("/json.dll", "JsonServiceProvider", []);
+        Route::WebMethod("/partial.dll", "PartialServiceProvider", []);
+        Route::WebMethod("/module.dll", "ModuleServiceProvider", []);
+        Route::WebMethod("/component.dll", "ComponentServiceProvider", []);
+        Route::WebMethod("/images/{filename}", "ImageServiceProvider", []);
+        Route::WebMethod("/res/{type}/{filename}", "ResourceServiceProvider", []);
+
+        // Add variables
+        if(!array_key_exists("CsrfToken", $_SESSION)) $_SESSION["CsrfToken"]  = uniqid(time());
+        if(!array_key_exists("ClientToken", $_SESSION)) $_SESSION["ClientToken"] = hash("sha1", time());
+        if(!array_key_exists("SessionStartTime", $_SESSION)) $_SESSION["SessionStartTime"] = Helpers::Now()->format("h:m:s");
+        if(!array_key_exists("SessionEndTime", $_SESSION)) $_SESSION["SessionEndTime"] = Helpers::Now()->add(new DateInterval('PT20M'))->format("h:m:s");
+
+        $_SESSION["RequestTime"] = Helpers::Now()->format("h:m:s");
+    }
+
+    /**
+     * Runs after request handeling
+     */
+    private function AfterRequest(){
+        $traceService = new TracingService();
+        $traceService->GenerateTracing();
     }
 
     /**
@@ -50,9 +83,7 @@ class Bootloader {
         $message = StringHelpers::SplitString($exception->getMessage(), "#", 0);
         $specifiedSource = StringHelpers::SplitString($exception->getMessage(), "#", 1);
 
-        if(StringHelpers::IsNullOrWhiteSpace($specifiedSource)){
-            $specifiedSource = $exception->getCode();
-        }
+        if(StringHelpers::IsNullOrWhiteSpace($specifiedSource)) $specifiedSource = $exception->getTraceAsString();
 
         $view = str_replace("{{source_file_line}}", $exception->getLine(), $view);
         $view = str_replace("{{source_file}}", $exception->getFile(), $view);
@@ -79,15 +110,15 @@ class Bootloader {
         set_exception_handler(array($this, "SetExceptionHandler"));
 
         $this->Autoloader();
+        $this->BeforeRequest(); // Runs before the request handeling
 
-        $request = new RequestService();
-        $requestModel = $request->GetRouteBasedOnRequestUrl();
-
-        $server = new ServerService($requestModel);
-        $responseModel = $server->Start();
+        $server = new ServerService();
+        $content = $server->Start();
 
         HttpResponse::SetContentType("text/html");
-        HttpResponse::SetData($responseModel->Page->Content);
+        HttpResponse::SetData($content);
+
+        $this->AfterRequest(); // Runs after the request handeling
     }
 }
 ?>

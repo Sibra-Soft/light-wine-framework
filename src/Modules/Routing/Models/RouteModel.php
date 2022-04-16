@@ -1,5 +1,5 @@
 <?php
-namespace LightWine\Core\Models;
+namespace LightWine\Modules\Routing\Models;
 
 class RouteModel
 {

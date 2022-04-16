@@ -3,9 +3,9 @@ namespace LightWine\Core\Enums;
 
 abstract class RouteTypeEnum
 {
-    const TemplateLink = "template-link";
-    const Channel = "channel";
-    const PageLink = "page-link";
-    const Webmethod = "webmethod";
-    const ApiHandler = "api-handler";
+    const VIEW = "view";
+    const CHANNEL = "channel";
+    const WEBMETHOD = "webmethod";
+    const API_HANDLER = "api-handler";
+    const REDIRECT = "redirect";
 }
