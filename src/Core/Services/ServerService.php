@@ -2,67 +2,70 @@
 namespace LightWine\Core\Services;
 
 use LightWine\Core\Models\RequestModel;
-use LightWine\Core\Models\ResponseModel;
-use LightWine\Core\Enums\RouteTypeEnum;
-use LightWine\Modules\ServiceProvider\Services\ServiceProviderService;
 use LightWine\Modules\Api\Services\ApiService;
-use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\Interfaces\IServerService;
 use LightWine\Modules\Logger\Services\LoggerService;
 use LightWine\Core\HttpResponse;
+use LightWine\Core\HttpRequest;
+use LightWine\Core\Enums\RouteTypeEnum;
+use LightWine\Modules\Routing\Services\RoutingService;
 
 class ServerService implements IServerService
 {
     private RequestModel $request;
     private PageService $pageService;
-    private ServiceProviderService $serviceProviderService;
     private ApiService $apiService;
     private LoggerService $logger;
+    private RoutingService $routingService;
 
-    public function __construct(RequestModel $requestModel){
+    public function __construct(){
         $this->apiService = new ApiService();
-        $this->serviceProviderService = new ServiceProviderService();
-        $this->pageService = new PageService($requestModel->Route);
-        $this->request = $requestModel;
+        $this->pageService = new PageService();
         $this->logger = new LoggerService();
+        $this->routingService = new RoutingService();
+    }
+
+    /**
+     * Runs a webmethod based on a file on the server or template from the cms
+     * @param string $module The name of the module to run
+     * @return string The return content of the function
+     */
+    private function RunWebMethod(string $module): string {
+        if(class_exists('LightWine\\Providers\\'.$module.'\\'.$module)){
+            $class = 'LightWine\\Providers\\'.$module.'\\'.$module;
+            $pageObject = new $class;
+
+            if(method_exists($pageObject , "Render")){
+                return call_user_func(array($pageObject, 'Render'));
+            }else{
+                return "";
+            }
+        }
+
+        return "";
     }
 
     /**
      * Starts a new instance of the framework server
-     * @return ResponseModel Model containing all the details of the current response
+     * @return string The content to return to the webbrowser
      */
-    public function Start(): ResponseModel {
-        $responseModel = new ResponseModel;
+    public function Start(): string {
+        $content = "";
+        $route = $this->routingService->MatchRouteByUrl(HttpRequest::RequestUrlWithoutQuerystring());
 
-        if($this->request->Route->NotFound){
-            $responseModel->Page = $this->serviceProviderService->CheckForServiceRequest($this->request->RequestUrl);
+        // Show error page if the requested route could not be found
+        if($route->NotFound) HttpResponse::ShowError(404, "Not found", "The specified content could not be found");
 
-            if(StringHelpers::IsNullOrWhiteSpace($responseModel->Page->Content)){
-                HttpResponse::ShowError(404, "Not found", "The specified content could not be found");
-            }
-        }else{
-            switch($this->request->Route->Type){
-                case RouteTypeEnum::Channel: $responseModel->Page = $this->serviceProviderService->CheckForServiceRequest($this->request->Route->Url); break;
-                case RouteTypeEnum::TemplateLink: $responseModel->Page = $this->pageService->Render(); break;
-                case RouteTypeEnum::ApiHandler: $responseModel->Page->Content = $this->apiService->Start(); break;
-            }
-
-            // Add the headers to the server response
-            foreach($responseModel->Page->Headers as $key => $value){
-                header($key.":".$value);
-            }
+        // Check the type of the current route
+        switch($route->Type){
+            case RouteTypeEnum::VIEW: $content = $this->pageService->Render($route)->Content; break;
+            case RouteTypeEnum::API_HANDLER: $content = $this->apiService->Start(); break;
+            case RouteTypeEnum::WEBMETHOD: $content = $this->RunWebMethod($route->Datasource); break;
+            case RouteTypeEnum::REDIRECT: HttpResponse::Redirect($route->Url, [], 302); break;
         }
 
         $this->logger->LogSiteVisitor();
 
-        return $responseModel;
-    }
-
-    public function ShowFileBrowser(string $path){
-
-    }
-
-    public function ShowSimplePage(string $content){
-
+        return $content;
     }
 }
