@@ -13,7 +13,7 @@ class CacheService {
     public function __construct() {
         $this->config = new ConfigurationManagerService();
 
-        $this->CacheFolder = $_SERVER["DOCUMENT_ROOT"].$this->config->GetAppSetting("cache_folder");
+        $this->CacheFolder = Helpers::MapPath($this->config->GetAppSetting("CacheFolder"));
 
         Helpers::CreateFolderIfNotExists($this->CacheFolder);
 
