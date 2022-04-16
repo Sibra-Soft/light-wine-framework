@@ -27,11 +27,7 @@ class ImageFileService implements IImageFileService
         $returnModel->CacheKey = sha1($filename);
         $returnModel->CacheFile = $_SERVER["DOCUMENT_ROOT"]."/cache/image_cache/".$returnModel->CacheKey.".cache";
 
-        $dataset = $this->databaseConnection->getDataset("SELECT * FROM `site_files` WHERE filename = ?filename LIMIT 1;");
         $cacheFileExists = file_exists($returnModel->CacheFile);
-
-        // The file could not be found
-        if($this->databaseConnection->rowCount <= 0 && !$cacheFileExists) return $returnModel;
 
         $returnModel->SaveToCache = $this->databaseConnection->DatasetFirstRow("cache", "boolean");
 
@@ -39,6 +35,11 @@ class ImageFileService implements IImageFileService
             // Check if the file is already saved in the cache
             $returnModel->FileData = file_get_contents($returnModel->CacheFile);
         }else{
+            $dataset = $this->databaseConnection->getDataset("SELECT * FROM `site_files` WHERE filename = ?filename LIMIT 1;");
+            
+            // The file could not be found
+            if($this->databaseConnection->rowCount <= 0 && !$cacheFileExists) return $returnModel;
+
             $userId = $this->databaseConnection->DatasetFirstRow("user_id", "integer");
 
             if($userId !== 0 && $userId !== $_SESSION["UserId"]){
