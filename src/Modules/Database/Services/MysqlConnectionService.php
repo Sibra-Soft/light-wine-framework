@@ -9,6 +9,7 @@ use \PDOException;
 use \DateTime;
 use \PDOStatement;
 use \Exception;
+use LightWine\Core\Helpers\TraceHelpers;
 
 class MysqlConnectionService implements IMysqlConnectionService {
     protected $dbConnection;
@@ -203,8 +204,16 @@ class MysqlConnectionService implements IMysqlConnectionService {
                 array_push($dataset, ["result" => false]);
             }
 
+            $timeStart = microtime(true);
+
             $statement->setFetchMode(PDO::FETCH_ASSOC);
             $dataset = $statement->fetchAll();
+
+            $timeEnd = microtime(true);
+            $executionTime = ($timeEnd - $timeStart) * 1000;
+
+            TraceHelpers::Write("Query executed in: ".$executionTime." seconds");
+            TraceHelpers::Write("Query executed: <pre>".$queryToExecute."</pre>");
         }
         catch(PDOException $e)
         {
