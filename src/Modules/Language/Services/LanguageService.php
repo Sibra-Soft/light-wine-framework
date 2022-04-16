@@ -4,8 +4,9 @@ namespace LightWine\Modules\Language\Services;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Cache\Services\CacheService;
+use LightWine\Modules\Language\Interfaces\ILanguageService;
 
-class LanguageService
+class LanguageService implements ILanguageService
 {
     private ConfigurationManagerService $config;
     private MysqlConnectionService $databaseConnection;
@@ -61,7 +62,7 @@ class LanguageService
      * @param string $anchor
      * @return string
      */
-    public function GetTranslation($anchor){
+    public function GetTranslation(string $anchor): string {
         if(!$this->cacheService->CheckCache("translations")){
             $this->cacheService->GetCache();
         }

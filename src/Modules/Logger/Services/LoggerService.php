@@ -5,8 +5,9 @@ use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Core\Helpers\DeviceHelpers;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
+use LightWine\Modules\Logger\Interfaces\ILoggerService;
 
-class LoggerService
+class LoggerService implements ILoggerService
 {
     private MysqlConnectionService $databaseConnection;
     private ConfigurationManagerService $config;
@@ -14,6 +15,24 @@ class LoggerService
     private function __constructor(){
         $this->config = new ConfigurationManagerService();
         $this->databaseConnection = new MysqlConnectionService();
+    }
+
+    /**
+     * Create the log entry in the log table
+     * @param string $logLevel The level of the log entry
+     * @param string $message The message of the log entry
+     * @param string $category The category of the log entry
+     */
+    private function Log(string $logLevel, string $message, string $category, int $id){
+        $logFolder = Helpers::MapPath("../logs/");
+
+        $logEntry = "";
+        $logEntry .= $logLevel;
+        $logEntry .= $message;
+        $logEntry .= $category;
+        $logEntry .= $id;
+
+        file_put_contents($logFolder."debug.log"."\n", $logEntry, FILE_APPEND);
     }
 
     /**
@@ -34,24 +53,6 @@ class LoggerService
         $logEntry .= DeviceHelpers::UserAgent();
 
         file_put_contents($logFolder."test.log", $logEntry . "\n", FILE_APPEND);
-    }
-
-    /**
-     * Create the log entry in the log table
-     * @param string $logLevel The level of the log entry
-     * @param string $message The message of the log entry
-     * @param string $category The category of the log entry
-     */
-    private function Log(string $logLevel, string $message, string $category, int $id){
-        $logFolder = Helpers::MapPath("../logs/");
-
-        $logEntry = "";
-        $logEntry .= $logLevel;
-        $logEntry .= $message;
-        $logEntry .= $category;
-        $logEntry .= $id;
-
-        file_put_contents($logFolder."debug.log"."\n", $logEntry, FILE_APPEND);
     }
 
     public function LogDebug(string $message, string $category = "general", $id = 0){
