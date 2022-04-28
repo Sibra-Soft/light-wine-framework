@@ -5,8 +5,9 @@ use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Enums\EnvironmentEnum;
 use LightWine\Core\HttpResponse;
+use LightWine\Modules\Tracing\Interfaces\ITracingService;
 
-class TracingService
+class TracingService implements ITracingService
 {
     private ConfigurationManagerService $settings;
 
