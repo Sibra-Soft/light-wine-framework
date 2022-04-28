@@ -6,10 +6,11 @@ use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\Logger\Services\LoggerService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Templates\Services\TemplatesService;
+use LightWine\Modules\Scheduler\Interfaces\ISchedulerService;
 
 use Cron\CronExpression;
 
-class SchedulerService
+class SchedulerService implements ISchedulerService
 {
     private LoggerService $logger;
     private MysqlConnectionService $databaseConnection;
@@ -27,7 +28,7 @@ class SchedulerService
      * @return SchedulerModel Model containg all the details of the last executed event
      */
     private function RunScheduledEvent(SchedulerModel $event): SchedulerModel {
-        $workerService = new WorkerService($event);
+        $workerService = new WorkerService();
         $cron = new CronExpression($event->CronExpression);
         $now = Helpers::Now();
 
@@ -36,10 +37,8 @@ class SchedulerService
             $event->NextRunDate = $cron->getNextRunDate();
             $event->LastRunDate = $now;
 
-            //$this->logger->LogDebug("Start running scheduled event: ".$event->Name, "workers", $event->Id);
             $workerService->event = $event;
             $workerService->RunWorker($event->WorkerTemplate);
-            //$this->logger->LogDebug("End running scheduled event: ".$event->Name, "workers", $event->Id);
         }
 
         return $event;
@@ -92,7 +91,7 @@ class SchedulerService
             }else{
                 $xml = simplexml_load_string($workertemplate->Content);
                 $expression = $xml->schedule->expression;
-
+                
                 $cron = new CronExpression($expression);
 
                 $this->databaseConnection->ClearParameters();
