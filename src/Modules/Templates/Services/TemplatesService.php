@@ -98,12 +98,12 @@ class TemplatesService implements ITemplatesService
         $this->databaseConnection->GetDataset("
         SELECT
 	        template.id,
-	        LOWER(object_value) AS `folder`
+	        LOWER(folder.`name`) AS folder
         FROM site_templates AS template
-        LEFT JOIN site_objects AS folder ON FIND_IN_SET(template.id, folder.items)
+        LEFT JOIN site_templates AS folder ON folder.id = template.parent_id
         WHERE template.`name` = ?templateName
 	        AND template.type = ?templateType
-            AND IF(?folder = '*', 1=1, LOWER(folder.object_value) = ?folder)
+            AND IF(?folder = '*', 1=1, LOWER(folder.`name`) = ?folder)
         LIMIT 1;
         ");
 
