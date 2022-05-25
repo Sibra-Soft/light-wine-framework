@@ -37,6 +37,7 @@ class Bootloader {
     private function BeforeRequest(){
         // Add build-in framework routes
         Route::WebMethod("/template.dll", "TemplateServiceProvider", []);
+        Route::WebMethod("/scheduler.dll", "SchedulerServiceProvider", []);
         Route::WebMethod("/imdb.dll", "ImageServiceProvider", []);
         Route::WebMethod("/json.dll", "JsonServiceProvider", []);
         Route::WebMethod("/partial.dll", "PartialServiceProvider", []);
@@ -99,7 +100,7 @@ class Bootloader {
      * @param string $file The path to the configuration file
      */
     public function AddConfigurationFile(string $file){
-        $GLOBALS["ConfigFile"] = $file;
+        $_SESSION["ConfigFile"] = $file;
     }
 
     /**

@@ -19,7 +19,7 @@ class ConfigurationManagerService implements IConfigurationManagerService
      * Loads the specified configuration file to the settings object
      */
     private function LoadSettingsFile(){
-        $configFile = $GLOBALS["ConfigFile"];
+        $configFile = $_SESSION["ConfigFile"];
 
         if(!file_exists($configFile)){
             throw new Exception("The specified application configuration file could not be found");
