@@ -1,29 +1,25 @@
 <?php
 namespace LightWine\Modules\Database\Services;
 
-use LightWine\Core\Helpers\Helpers;
-use LightWine\Modules\Database\Models\UploadBlobModel;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\QueryBuilder\Services\QueryBuilderService;
 use LightWine\Modules\QueryBuilder\Enums\QueryExtenderEnum;
 use LightWine\Modules\QueryBuilder\Enums\QueryOperatorsEnum;
 use LightWine\Modules\Database\Interfaces\IDatabaseHelperService;
-use LightWine\Core\Helpers\RequestVariables;
+use LightWine\Modules\Files\Services\UploadFileService;
 
 class DatabaseHelperService implements IDatabaseHelperService {
     private MysqlConnectionService $databaseConnection;
     private QueryBuilderService $queryBuilder;
+    private UploadFileService $uploadFileService;
 
     public function __construct(MysqlConnectionService $connection){
         $this->databaseConnection = $connection;
+        $this->uploadFileService = new UploadFileService($connection);
         $this->queryBuilder = new QueryBuilderService();
     }
 
-    /**
-     * This function adds, or edits rows in a table based on the specified array
-     * @param array $mutationArray The array of data to add or edit
-     * @param string $targetTable The table the data must be added, or changed
-     */
+    /** {@inheritdoc} */
     public function SyncSet(array $mutationArray, string $targetTable, array $options){
         $this->queryBuilder->Clear();
 
@@ -64,12 +60,7 @@ class DatabaseHelperService implements IDatabaseHelperService {
         }
     }
 
-    /**
-     * Use the Lookup function to display the value of a field that isn't in the record source for your form or report
-     * @param string $expr An expression that identifies the field whose value you want to return
-     * @param string $table A string expression identifying the set of records that constitutes the domain
-     * @param string $criteria A string expression used to restrict the range of data on which the DLookup function is performed
-     */
+    /** {@inheritdoc} */
     public function Lookup(string $expr, string $table, string $criteria){
         // Build the criteria
         $criteria = (StringHelpers::IsNullOrWhiteSpace($criteria) ? "1=1": $criteria);
@@ -81,11 +72,14 @@ class DatabaseHelperService implements IDatabaseHelperService {
         return $this->databaseConnection->DatasetFirstRow($expr);
     }
 
-    /**
-     * This function deletes a record from a specified tabel based on the specified id
-     * @param string $table The table the record must be deleted from
-     * @param int $id The id of the record that must be deleted
-     */
+    /** {@inheritdoc} */
+    public function DeleteMultipleRecords(string $table, string $ids){
+        $query = "DELETE FROM `$table` WHERE id IN ($ids)";
+
+        $this->databaseConnection->ExecuteQuery($query);
+    }
+
+    /** {@inheritdoc} */
     public function DeleteRecord(string $table, int $id){
         $this->queryBuilder->Clear();
         $this->queryBuilder->Delete($table);
@@ -94,11 +88,7 @@ class DatabaseHelperService implements IDatabaseHelperService {
         $this->databaseConnection->ExecuteQuery($this->queryBuilder->Render());
     }
 
-    /**
-     * This function updates or inserts a record in a specific database table
-     * @param string $table The table a record must be updated or inserted into
-     * @param int|null $id The id of the row that must be updated
-     */
+    /** {@inheritdoc} */
     public function UpdateOrInsertRecordBasedOnParameters(string $table, int $id = null, bool $ignoreDuplicates = false):int {
         $this->queryBuilder->ignoreDuplicatesOnInsert = $ignoreDuplicates;
         $this->queryBuilder->Clear();
@@ -126,60 +116,14 @@ class DatabaseHelperService implements IDatabaseHelperService {
         return $this->databaseConnection->rowInsertId;
     }
 
-    /**
-     * Upload a file based on a specified url
-     * @param string $url The url of the file to upload to the database
-     */
+    /** {@inheritdoc} */
+    public function UploadBlob(){
+        $this->uploadFileService->UploadFileFromWebform();
+    }
+
+    /** {@inheritdoc} */
     public function UploadBlobBasedOnUrl(string $url){
-        $uploadModel = new UploadBlobModel;
-
-        $targetDirectory = $_SERVER["DOCUMENT_ROOT"]."/temp/uploads/";
-
-        $uploadModel->Filename = Helpers::NewGuid().".jpg";
-        $uploadModel->File = $targetDirectory.$uploadModel->Filename;
-
-        // Download the file from the specified url
-        Helpers::DownloadExternalFile($url, $uploadModel->File);
-
-        // Get the content of the current file
-        $image = file_get_contents($uploadModel->File);
-
-        // Add the details to the upload model
-        $uploadModel->ItemId = (int)RequestVariables::Get("item_id", 0);
-        $uploadModel->FileSize = filesize($uploadModel->File);
-        $uploadModel->MimeType = Helpers::GetMimeType($uploadModel->File);
-        $uploadModel->ObjectType = RequestVariables::Get("type");
-        $uploadModel->ImageWidth = getimagesize($uploadModel->File)[0];
-        $uploadModel->ImageHeight = getimagesize($uploadModel->File)[1];
-        $uploadModel->Extension = strtolower(pathinfo($uploadModel->File, PATHINFO_EXTENSION));
-        $uploadModel->ParentFolder = (int)RequestVariables::Get("parent_folder");
-
-        // Add the parameters to the database connection
-        $this->databaseConnection->ClearParameters();
-        $this->databaseConnection->AddParameter("user_id", $_SESSION["UserId"]);
-        $this->databaseConnection->AddParameter("content", $image);
-        $this->databaseConnection->AddParameter("filename", $uploadModel->Filename);
-        $this->databaseConnection->AddParameter("created_by", $_SESSION["UserFullname"]);
-        $this->databaseConnection->AddParameter("item_id", $uploadModel->ItemId, 0);
-        $this->databaseConnection->AddParameter("type", $uploadModel->ObjectType, "image");
-        $this->databaseConnection->AddParameter("content_type", $uploadModel->MimeType, "");
-        $this->databaseConnection->AddParameter("parent_id", $uploadModel->ParentFolder, 0);
-
-        if($uploadModel->ItemId <> 0){
-            $this->databaseConnection->GetDataset("SELECT `id` FROM `site_files` WHERE `user_id` = ?user_id AND item_id = ?item_id LIMIT 1;");
-
-            if($this->databaseConnection->rowCount > 0){
-                $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("site_files", $this->databaseConnection->DatasetFirstRow("id"));
-            }else{
-                $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("site_files");
-            }
-        }else{
-            $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("site_files");
-        }
-
-        $uploadModel->Id = $this->databaseConnection->rowCount;
-
-        return $uploadModel;
+        $this->uploadFileService->UploadFileBasedOnUrl($url);
     }
 }
 ?>
