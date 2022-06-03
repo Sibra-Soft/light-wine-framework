@@ -3,13 +3,13 @@ namespace LightWine\Modules\Database\Services;
 
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Modules\Database\Interfaces\IMysqlConnectionService;
+use LightWine\Core\Helpers\TraceHelpers;
 
 use \PDO;
 use \PDOException;
 use \DateTime;
 use \PDOStatement;
 use \Exception;
-use LightWine\Core\Helpers\TraceHelpers;
 
 class MysqlConnectionService implements IMysqlConnectionService {
     protected $dbConnection;
@@ -17,12 +17,13 @@ class MysqlConnectionService implements IMysqlConnectionService {
 
     public static $DatabaseConnection;
 
-    public $query = "";
-    public $mysqlQueryParameters = [];
     public $rowCount = 0;
     public $rowsAffected = 0;
     public $rowInsertId = 0;
-    public $lastErrorCode = null;
+
+    private $query = "";
+    private $mysqlQueryParameters = [];
+    private $lastErrorCode = null;
 
     public DatabaseHelperService $helpers;
     public ConfigurationManagerService $config;
@@ -55,11 +56,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
         }
     }
 
-    /**
-     * This function gets the specified column row value
-     * @param string $column
-     * @return mixed
-     */
+    /** {@inheritdoc} */
     public function DatasetFirstRow(string $column, string $typeOf = "string"){
         switch($typeOf){
             case "string": $return = (string)$this->datasetFirstRow[$column]; break;
@@ -71,11 +68,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
         return $return;
     }
 
-    /**
-     * Execute a specified query
-     * @param string $query
-     * @return PDOStatement
-     */
+    /** {@inheritdoc} */
     public function ExecuteQuery(string $query): PDOStatement {
         $queryToExecute = $this->doParameterReplacements($query);
         $this->query = $queryToExecute;
@@ -93,12 +86,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
         }
     }
 
-    /**
-     * Get the fieldset of a specified query
-     * @param string $tableOrQuery
-     * @param string $type
-     * @return array[]
-     */
+    /** {@inheritdoc} */
     public function GetFieldset(string $tableOrQuery, string $type = "table"){
         $fieldset = array();
         $index = 0;
@@ -132,19 +120,12 @@ class MysqlConnectionService implements IMysqlConnectionService {
         return $fieldset;
     }
 
-    /**
-     * Clear all specified query parameters
-     */
+    /** {@inheritdoc} */
     public function ClearParameters(){
         $this->mysqlQueryParameters = array();
     }
 
-    /**
-     * Add query parameter to the query
-     * @param string $name The name of the parameter
-     * @param string $value The value of the parameter
-     * @param string $default (optional) The default value if the value is empty
-     */
+    /** {@inheritdoc} */
     public function AddParameter(string $name, $value, $default = null){
         if($value == ""){
             $this->mysqlQueryParameters["?$name"] = $default;
@@ -172,20 +153,12 @@ class MysqlConnectionService implements IMysqlConnectionService {
         return $tempQuery;
     }
 
-    /**
-     * Gets a dataset and returns json
-     * @param string $query The query to get the dataset off
-     * @return string The json of the dataset
-     */
+    /** {@inheritdoc} */
     public function GetDatasetAsJson(string $query): array {
         return $this->GetDataset($query);
     }
 
-    /**
-     * Get a dataset from the specified query
-     * @param string $query
-     * @return array[]
-     */
+    /** {@inheritdoc} */
     public function GetDataset(string $query = null){
         $dataset = array();
 
