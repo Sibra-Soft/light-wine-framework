@@ -123,29 +123,6 @@ class TemplatingService implements ITemplatingService
             $variableValue = str_replace("'", "", StringHelpers::StringBetween($variable, "(", ")"));
 
             switch($variableName){
-                // This will replace the form tag
-                case "form":
-                    // Todo: Add webform functionality
-
-                    //$form = new webformservice;
-                    //$content = $this->ReplaceVariable($variable, $form->RenderWebform($variableValue), $content);
-                    break;
-
-                // This will replace the image tag
-                case "image":
-                    // Todo: Add image replacement functionality
-
-                    //$image = new services\ImageService();
-
-                    //$parameters = explode(',', $variableValue);
-                    //$imageName = (string)$parameters[0];
-                    //$imageWidth = (int)$parameters[1];
-                    //$imageHeight = (int)$parameters[2];
-
-                    //$tag = $image->GenerateImageTag($imageName, $imageHeight, $imageWidth);
-                    //$content = $this->ReplaceVariable($variable, $tag, $content);
-                    break;
-
                 // This will render and include a php script
                 case "include-stream":
                     ob_start();
