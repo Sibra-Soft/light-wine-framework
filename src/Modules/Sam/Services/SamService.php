@@ -2,25 +2,22 @@
 namespace LightWine\Modules\Sam\Services;
 
 use LightWine\Modules\Sam\Models\SamLoginResponseModel;
-use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Core\Helpers\Helpers;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Modules\Sam\Interfaces\ISamService;
 use LightWine\Modules\Sam\Models\SamUserRightsReturnModel;
 use LightWine\Core\Helpers\DeviceHelpers;
+use LightWine\Core\HttpResponse;
 
 class SamService implements ISamService {
     public static $passwordBlowFish = "SeQ3H55Dp9XxndP";
 
     private TemplatesService $templateService;
-    private ConfigurationManagerService $configurationManager;
     private MysqlConnectionService $databaseConnection;
 
     public function __construct() {
         $this->templateService = new TemplatesService();
-        $this->configurationManager = new ConfigurationManagerService();
         $this->databaseConnection = new MysqlConnectionService();
     }
 
@@ -76,7 +73,7 @@ class SamService implements ISamService {
                 header('WWW-Authenticate: Basic realm="My Realm"');
                 header('HTTP/1.0 401 Unauthorized');
 
-                HttpContextHelpers::ShowError(403, "You don't have permission to access this content", "Forbidden");
+                HttpResponse::ShowError(403, "You don't have permission to access this content", "Forbidden");
             }else{
                 $username = $_SERVER['PHP_AUTH_USER'];
                 $password = $_SERVER['PHP_AUTH_PW'];
@@ -84,7 +81,7 @@ class SamService implements ISamService {
                 if($this->Login($username, $password)){
                     $_SESSION["BasicAuthChecksum"] = hash("sha1", Helpers::NewGuid());
                 }else{
-                    HttpContextHelpers::ShowError(403, "You don't have permission to access this content", "Forbidden");
+                    HttpResponse::ShowError(403, "You don't have permission to access this content", "Forbidden");
                 }
             }
         }
