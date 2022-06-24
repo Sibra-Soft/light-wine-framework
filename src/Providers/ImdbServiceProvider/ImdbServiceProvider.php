@@ -16,6 +16,9 @@ class ImdbServiceProvider
         $this->settings = new ConfigurationManagerService();
     }
 
+    /**
+     * Starts the required action based on the specified request variables
+     */
     public function Render(){
         $searchMovieValue = RequestVariables::Get("search-movie");
         $searchSerieValue = RequestVariables::Get("search-serie");
@@ -81,6 +84,13 @@ class ImdbServiceProvider
     public function GetSerieSeasonEpisodes(string $imdbId, int $season){
         $apiResponse = $this->HandleAPIRequest("SeasonEpisodes", $imdbId."/".$season);
         return $apiResponse;
+    }
+
+    /**
+     * Gets the imdb.com top250 movie list
+     */
+    public function GetTop250() {
+        $apiResponse = $this->HandleAPIRequest("Top250Movies", "");
     }
 
     /**
