@@ -2,17 +2,18 @@
 namespace LightWine\Modules\Cache\Services;
 
 use LightWine\Core\Helpers\Helpers;
+use LightWine\Modules\Cache\Interfaces\ICacheService;
 use LightWine\Modules\Cache\Models\CacheServiceReturnModel;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 
-class CacheService {
+class CacheService implements ICacheService {
     protected $CacheFolder;
 
     private ConfigurationManagerService $config;
 
     public function __construct() {
         $this->config = new ConfigurationManagerService();
-
+        
         $this->CacheFolder = Helpers::MapPath($this->config->GetAppSetting("CacheFolder"));
 
         Helpers::CreateFolderIfNotExists($this->CacheFolder);
