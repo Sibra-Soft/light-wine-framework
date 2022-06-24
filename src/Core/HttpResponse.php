@@ -14,7 +14,7 @@ class HttpResponse
      * @param string $value The value of the cookie
      */
     public static function SetCookie(string $name, string $value){
-
+        setcookie($name, $value);
     }
 
     /**
@@ -52,17 +52,34 @@ class HttpResponse
      * @param string $file The full path of the file to be send
      */
     public static function SetFile(string $file){
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"" . basename($file) . "\"");
 
+        readfile($file);
+        exit();
     }
 
     /**
      * Redirect to a specified location
      * @param string $url The url the user me be redirected to
      * @param array $querystring Querystring parameters that must be added when redirecting
-     * @param int $status The code that must be used when redirecting
+     * @param int $status The code that must be used when redirecting (301: Temporary redirect, 301: Moved Permanently)
      */
-    public static function Redirect(string $url, array $querystring, int $status = 302){
+    public static function Redirect(string $url, array $querystring, int $status = 301){
+        $querystring = http_build_query($querystring);
+        header('location: '.$url.$querystring, true, $status);
+        exit();
+    }
 
+    /**
+     * Return json data in the browser
+     * @param array $data A array of data you want to send
+     */
+    public static function SetReturnJson(array $data){
+        self::SetContentType("application/json");
+        self::SetData(json_encode($data, JSON_NUMERIC_CHECK));
+        exit();
     }
 
     /**
