@@ -3,5 +3,5 @@ namespace LightWine\Core\Interfaces;
 
 interface IServerService
 {
-    public function Start();
+    public function Start(): string;
 }
