@@ -20,9 +20,9 @@ class Helpers {
 
     /**
      * Generate a pincode with four decimals
-     * @return int
+     * @return int The generated pincode containing 4 digits
      */
-    public static function GeneratePincode(){
+    public static function GeneratePincode(): int {
         return mt_rand(1111, 9999);
     }
 
@@ -136,7 +136,7 @@ class Helpers {
         $content = fread($myfile, filesize($filename));
         fclose($myfile);
 
-        return $content;
+        return iconv("UTF-8","ISO-8859-1//IGNORE", $content);
     }
 
     /**
