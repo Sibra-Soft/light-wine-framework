@@ -16,7 +16,7 @@ class StringTemplaterService implements IStringTemplaterService
 
     /**
      * Adds a array of variables to the variable store
-     * @param array $variablesArray
+     * @param array $variablesArray A array containg the variables you want to add
      */
     public function AssignArrayOfVariables(array $variablesArray){
         foreach($variablesArray as $key => $value){$this->Store[$key] = $value; }
@@ -24,8 +24,8 @@ class StringTemplaterService implements IStringTemplaterService
 
     /**
      * Add one variable to the variable store
-     * @param string $key
-     * @param string $value
+     * @param string $key The name of the variable you want to add
+     * @param string $value The value of the variable you want to add
      */
     public function AssignVariable(string $key, string $value){
         $this->Store[$key] = $value;
@@ -33,8 +33,8 @@ class StringTemplaterService implements IStringTemplaterService
 
     /**
      * Do the replacements on the specified content
-     * @param string $template
-     * @return string
+     * @param string $template The template you want to use
+     * @return string The specified template with replaced variables
      */
     public function DoReplacements(string $template): string {
         preg_match_all('/(?<=\{{).+?(?=\}})/', $template, $matches);
