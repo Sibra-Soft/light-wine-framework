@@ -6,7 +6,7 @@
 The LightWine framework is a PHP framework that can be used for creating websites and webapplications. The framework has various useful functions and classes that make it easy creating websites.
 
 ## Getting started
-* [Installation](https://github.com/Sibra-Soft/LightWineFramework/wiki/Installation)
+* [Installation](https://github.com/Sibra-Soft/light-wine-framework/wiki)
 
 ## Features
 * [Database Service](https://github.com/Sibra-Soft/LightWineFramework/wiki/Database-Service)
