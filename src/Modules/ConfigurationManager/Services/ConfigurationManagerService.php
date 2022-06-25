@@ -35,9 +35,9 @@ class ConfigurationManagerService implements IConfigurationManagerService
     /**
      * Gets a specified application setting from the config
      * @param string $name The name of the setting
-     * @return string The value of the requested setting
+     * @return string|array The value of the requested setting
      */
-    public function GetAppSetting(string $name, string $default = ""): string {
+    public function GetAppSetting(string $name, string $default = ""){
         if(array_key_exists($name, $this->Settings)){
             return $this->Settings[$name];
         }else{
