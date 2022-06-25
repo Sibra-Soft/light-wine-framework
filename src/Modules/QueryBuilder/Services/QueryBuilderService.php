@@ -268,6 +268,7 @@ class QueryBuilderService implements IQueryBuilderService
         $constructor .= "UPDATE ".$this->queryConstructor["2_FROM"];
         $constructor .= " ";
 
+        $values = "";
         $updates = "SET ";
         foreach($this->queryConstructor["1_DATA"] as $column => $value){
             if(gettype($value) == "string"){
