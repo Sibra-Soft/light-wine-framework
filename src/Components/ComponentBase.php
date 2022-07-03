@@ -14,6 +14,12 @@ class ComponentBase implements IComponentBase
         $this->databaseConnection = new MysqlConnectionService();
     }
 
+    /**
+     * Gets the settings of the specified component
+     * @param object $controlInstance The instance of the component
+     * @param int $componentId The id of the component
+     * @return object A object containing all the settings of the component
+     */
     public function GetSettings($controlInstance, int $componentId): object {
         $array = [];
 
