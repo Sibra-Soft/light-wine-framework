@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Modules\Database\Services;
 
+use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Modules\Database\Interfaces\IMysqlConnectionService;
 use LightWine\Core\Helpers\TraceHelpers;
@@ -66,6 +67,14 @@ class MysqlConnectionService implements IMysqlConnectionService {
         }
 
         return $return;
+    }
+
+    /** {@inheritdoc} */
+    public function ExecuteQueryBasedOnFile(string $file): array {
+        $query = Helpers::GetFileContent($file);
+        $dataset = $this->GetDataset($query);
+        
+        return $dataset;
     }
 
     /** {@inheritdoc} */

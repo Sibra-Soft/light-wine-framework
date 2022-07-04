@@ -54,4 +54,11 @@ interface IMysqlConnectionService
      * @return array[] Array containg all the rows of the executed query
      */
     public function GetDataset(string $query = null);
+
+    /**
+     * Executes a query based on the specified *.sql file
+     * @param string $file The .sql file containing the query you want to execute
+     * @return array The returned dataset of the executed query
+     */
+    public function ExecuteQueryBasedOnFile(): array;
 }
