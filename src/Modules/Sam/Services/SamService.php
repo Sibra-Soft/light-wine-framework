@@ -21,6 +21,10 @@ class SamService implements ISamService {
         $this->databaseConnection = new MysqlConnectionService();
     }
 
+    /**
+     * Gets the role of the current user
+     * @return SamUserRightsReturnModel Model containing all the information of the role of the current user
+     */
     public function GetUserRightsAssignment(): SamUserRightsReturnModel {
         $returnModel = new SamUserRightsReturnModel;
 
@@ -30,12 +34,16 @@ class SamService implements ISamService {
         return $returnModel;
     }
 
-    public function CheckDeviceRegistration(){
+    /**
+     * Checks if a specified device is registered
+     * @return bool Returns true if registered, false if not registered
+     */
+    public function CheckDeviceRegistration(): bool {
         $this->databaseConnection->ClearParameters();
         $this->databaseConnection->AddParameter("deviceId", DeviceHelpers::DeviceGuid($_SESSION["UserId"]));
         $this->databaseConnection->AddParameter("userId", $_SESSION["UserId"]);
         $this->databaseConnection->GetDataset("SELECT * FROM `_devices` WHERE device_guid = ?deviceId AND user_id = ?userId LIMIT 1;");
-
+        
         if($this->databaseConnection->rowCount > 0){
             if($this->databaseConnection->DatasetFirstRow("status") == "verified"){
                 return true;
@@ -47,7 +55,11 @@ class SamService implements ISamService {
         }
     }
 
-    public function RegisterDevice(){
+    /**
+     * Register a new device
+     * @return int The pincode that must be entered to complete the registration
+     */
+    public function RegisterDevice(): int {
         $pincode = Helpers::GeneratePincode();
 
         $this->databaseConnection->ClearParameters();
@@ -87,10 +99,20 @@ class SamService implements ISamService {
         }
     }
 
-    public function CheckIfUserIsLoggedin(){
+    /**
+     * Checks if the user is loggedin returns true or false
+     * @return bool Retruns true if the user is loggedin, false if the user is not loggedin
+     */
+    public function CheckIfUserIsLoggedin(): bool {
         return isset($_SESSION["Checksum"]);
     }
 
+    /**
+     * Login the specified user, using a username and password
+     * @param string $username The username of the user you want to login
+     * @param string $password The password of the user you want to login
+     * @return SamLoginResponseModel Model containing all the details of the specified user and login attempt
+     */
     public function Login(string $username, string $password): SamLoginResponseModel {
         $responseModel = new SamLoginResponseModel;
 
@@ -149,6 +171,9 @@ class SamService implements ISamService {
         return $responseModel;
     }
 
+    /**
+     * Logoff the current user
+     */
     public function Logoff() {
         unset($_SESSION["Checksum"]);
     }

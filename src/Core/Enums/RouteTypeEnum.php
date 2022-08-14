@@ -8,4 +8,5 @@ abstract class RouteTypeEnum
     const WEBMETHOD = "webmethod";
     const API_HANDLER = "api-handler";
     const REDIRECT = "redirect";
+    const CONTROLLER = "controller";
 }

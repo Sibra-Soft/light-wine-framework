@@ -70,7 +70,7 @@ class UploadFileService implements IUploadFileService
         $this->databaseConnection->AddParameter("filename", $fileModel->Filename);
         $this->databaseConnection->AddParameter("created_by", $_SESSION["UserFullname"]);
         $this->databaseConnection->AddParameter("item_id", $fileModel->ItemId, 0);
-        $this->databaseConnection->AddParameter("type", $fileModel->ObjectType, "image");
+        $this->databaseConnection->AddParameter("type", $fileModel->ObjectType, "file");
         $this->databaseConnection->AddParameter("content_type", $fileModel->MimeType, "");
         $this->databaseConnection->AddParameter("parent_id", $fileModel->ParentFolder, 0);
 

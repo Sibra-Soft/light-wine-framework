@@ -27,10 +27,18 @@ class Route
     }
 
     public static function Redirect(string $url, string $targetLocation, int $type = 302){
-
+        array_push(self::$Routes, [
+            "type" => "redirect",
+            "method" => "GET",
+            "url" => $url,
+            "source" => $targetLocation,
+            "options" => [
+                "redirect_type" => $type
+            ]
+        ]);
     }
 
-    public static function View(string $url, int $template, array $options){
+    public static function View(string $url, int | string $template, array $options){
         array_push(self::$Routes, [
             "type" => "view",
             "method" => "GET",
@@ -46,6 +54,16 @@ class Route
             "method" => "GET",
             "url" => $url,
             "source" => $name,
+            "options" => $options
+        ]);
+    }
+
+    public static function Controller(string $url, string $module, string $controller, string $method, array $options){
+        array_push(self::$Routes, [
+            "type" => "controller",
+            "method" => $method,
+            "url" => $url,
+            "source" => $module."~".$controller,
             "options" => $options
         ]);
     }

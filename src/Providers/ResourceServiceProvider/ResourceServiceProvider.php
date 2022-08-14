@@ -8,7 +8,7 @@ use LightWine\Core\Helpers\RequestVariables;
 
 class ResourceServiceProvider
 {
-    private ResourceService $imageFileService;
+    private ResourceService $resourceService;
 
     public function __construct(){
         $this->resourceService = new ResourceService();

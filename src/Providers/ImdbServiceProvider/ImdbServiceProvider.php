@@ -23,7 +23,7 @@ class ImdbServiceProvider
         $searchMovieValue = RequestVariables::Get("search-movie");
         $searchSerieValue = RequestVariables::Get("search-serie");
         $titleId = RequestVariables::Get("title");
-        $seasonNr = RequestVariables::Get("season");
+        $seasonNr = RequestVariables::Get("seasons");
 
         HttpResponse::SetContentType("application/json; charset=utf-8");
 

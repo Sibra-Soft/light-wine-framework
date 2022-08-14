@@ -6,8 +6,9 @@ use LightWine\Components\DeviceVerification\DeviceVerification;
 use LightWine\Components\Dataview\Dataview;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Templating\Services\TemplatingService;
-use LightWine\Core\Helpers\HttpContextHelpers;
 use LightWine\Core\Interfaces\IComponentService;
+use LightWine\Core\HttpResponse;
+use LightWine\Components\Webform\Webform;
 
 class ComponentsService implements IComponentService
 {
@@ -37,6 +38,7 @@ class ComponentsService implements IComponentService
                 case "account": $myControl = new Account($controlId); $controlContent = $myControl->Init(); break;
                 case "device-verification": $myControl = new DeviceVerification(); $controlContent = $myControl->Init($controlId); break;
                 case "dataview": $myControl = new Dataview($controlId); $controlContent = $myControl->Init(); break;
+                case "webform": $myControl = new Webform($controlId); $controlContent = $myControl->Init(); break;
             }
 
             $template = $controlContent;
@@ -45,7 +47,7 @@ class ComponentsService implements IComponentService
 
             return $template;
         }else{
-            HttpContextHelpers::ShowError(404, "Not found", "Component with name ". $name." could not be found");
+            HttpResponse::ShowError(404, "Not found", "Component with name ". $name." could not be found");
             return "";
         }
     }

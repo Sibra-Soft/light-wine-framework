@@ -58,9 +58,9 @@ class SchedulerService implements ISchedulerService
 
         foreach($dataset as $row){
             $eventId = null;
-            $guid = md5($workerId.$workerName);
             $workerId = $row["id"];
             $workerName = $row["name"];
+            $guid = md5($workerId.$workerName);
             $workertemplate = $this->templatesService->GetTemplateById($workerId);
 
             $this->databaseConnection->ClearParameters();
@@ -91,7 +91,7 @@ class SchedulerService implements ISchedulerService
             }else{
                 $xml = simplexml_load_string($workertemplate->Content);
                 $expression = $xml->schedule->expression;
-                
+
                 $cron = new CronExpression($expression);
 
                 $this->databaseConnection->ClearParameters();

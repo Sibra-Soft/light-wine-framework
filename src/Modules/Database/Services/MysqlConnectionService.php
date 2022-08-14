@@ -25,6 +25,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
     private $query = "";
     private $mysqlQueryParameters = [];
     private $lastErrorCode = null;
+    private $databaseName = "";
 
     public DatabaseHelperService $helpers;
     public ConfigurationManagerService $config;
@@ -39,6 +40,8 @@ class MysqlConnectionService implements IMysqlConnectionService {
         $username = $this->config->ConnectionStrings("DefaultConnectionString", "user");
         $password = $this->config->ConnectionStrings("DefaultConnectionString", "password");
         $conString = "mysql:host=".$server.";dbname=".$database;
+
+        $this->databaseName = $database;
 
         try {
             // Check if the database connection is already declared
@@ -73,7 +76,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
     public function ExecuteQueryBasedOnFile(string $file): array {
         $query = Helpers::GetFileContent($file);
         $dataset = $this->GetDataset($query);
-        
+
         return $dataset;
     }
 
@@ -175,6 +178,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
             $query = $this->query;
         }
 
+        $this->AddParameter("currentDatabase", $this->databaseName);
         $queryToExecute = $this->doParameterReplacements($query);
 
         try {
@@ -206,9 +210,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
         $this->rowCount = $statement->rowCount();
 
         // Only set the datasetfirstrow property if a row is returend
-        if($this->rowCount > 0){
-            $this->datasetFirstRow = $dataset[0];
-        }
+        if($this->rowCount > 0)  $this->datasetFirstRow = $dataset[0];
 
         return $dataset;
     }

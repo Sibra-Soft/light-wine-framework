@@ -4,16 +4,26 @@ namespace LightWine\Components\DeviceVerification;
 use LightWine\Components\ComponentBase;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Core\Helpers\RequestVariables;
+use LightWine\Modules\Sam\Services\SamService;
+use LightWine\Core\Helpers\DeviceHelpers;
+use LightWine\Modules\Templating\Services\TemplatingService;
+use LightWine\Components\DeviceVerification\Models\DeviceVerificationModel;
+use LightWine\Modules\Communication\Services\MessageQueueService;
 
 class DeviceVerification {
-    private int $controlId = 0;
-    private string $mainTemplate = "";
-
     private ComponentBase $control;
     private MysqlConnectionService $databaseConnection;
+    private SamService $samService;
+    private TemplatingService $templatingService;
+    private DeviceVerificationModel $settings;
+    private MessageQueueService $messageQueue;
 
-    public function __construct(){
+    public function __construct(int $id){
+        $this->settings = $this->control->GetSettings(new DeviceVerificationModel, $id);
         $this->databaseConnection = new MysqlConnectionService();
+        $this->samService = new SamService();
+        $this->templatingService = new TemplatingService();
+        $this->messageQueue = new MessageQueueService();
     }
 
     private function ConfirmDeviceVerification(){
@@ -26,38 +36,28 @@ class DeviceVerification {
     }
 
     private function SendDeviceVerification(){
-        $dbConnection = new \DalConnection();
-        $device = new \services\DeviceService();
-        $sam = new \SecurityAccountManager();
-        $templaterService = new \TacoTinyTemplater();
-
         // Make sure to only show the message once
-        if(!$sam->CheckIfUserIsLoggedin()){
-            header("location: /");
-        }
+        if(!$this->samService->CheckIfUserIsLoggedin()) header("location: /");
 
         $userId = $_SESSION["UserId"];
 
         // Check if the device already is verified
-        $dbConnection->ClearParameters();
-        $dbConnection->AddParameter("deviceGuid", $device->DeviceGuid($userId));
-        $dbConnection->GetDataset("SELECT * FROM `_devices` WHERE device_guid = ?deviceGuid AND status = 'verified'");
+        $this->databaseConnection->ClearParameters();
+        $this->databaseConnection->AddParameter("deviceGuid", DeviceHelpers::DeviceGuid($userId));
+        $this->databaseConnection->GetDataset("SELECT * FROM `_devices` WHERE device_guid = ?deviceGuid AND status = 'verified'");
 
-        if($dbConnection->rowCount <= 0){
-            $dbConnection->ClearParameters();
+        if($this->databaseConnection->rowCount <= 0){
+            $this->databaseConnection->ClearParameters();
 
-            $dbConnection->AddParameter("user_id", $userId);
-            $dbConnection->AddParameter("device_guid", $device->DeviceGuid($userId));
-            $dbConnection->AddParameter("status", "waiting");
-            $dbConnection->AddParameter("ip", $device->IP());
-            $dbConnection->AddParameter("os", $device->OS());
-            $dbConnection->AddParameter("hostname", $device->Hostname());
-
-            \DalHelpers::$dbConnection = $dbConnection;
-            \DalHelpers::UpdateOrInsertRecordBasedOnParameters("_devices");
+            $this->databaseConnection->AddParameter("user_id", $userId);
+            $this->databaseConnection->AddParameter("device_guid", DeviceHelpers::DeviceGuid($userId));
+            $this->databaseConnection->AddParameter("status", "waiting");
+            $this->databaseConnection->AddParameter("ip", DeviceHelpers::IP());
+            $this->databaseConnection->AddParameter("os", DeviceHelpers::OS());
+            $this->databaseConnection->AddParameter("hostname", DeviceHelpers::Hostname());
+            $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("_devices");
 
             // Do main templater replacements
-            $templaterService->ClearVariables();
             $templaterService->AssignVariable("os", $device->OS());
             $templaterService->AssignVariable("ip_address", $device->IP());
             $templaterService->AssignVariable("browser", $device->Browser());
@@ -74,22 +74,19 @@ class DeviceVerification {
             $mailer->AssignVariable("device_hostname", $device->Hostname());
             $mailer->SendMailFromTemplate($_SESSION["Username"], "device-verify", "Apparaat Verificatie");
 
-            $sam->Logoff();
+            $this->samService->Logoff();
         }else{
             header("location: /dashboard/");
         }
     }
 
     private function RenderControl(){
-        $this->mainTemplate = $control->GetControlTemplate("MainTemplate");
-
-        // Select the function based on the component mode
-        switch($control->GetSettings("Mode")){
+        switch($this->settings->Mode){
             case "SendVerification": $this->SendDeviceVerification(); break;
             case "ConfirmVerification": $this->ConfirmDeviceVerification(); break;
         }
 
-        return $this->mainTemplate;
+        return $this->settings->MainTemplate;
     }
 
     public function Init(){
