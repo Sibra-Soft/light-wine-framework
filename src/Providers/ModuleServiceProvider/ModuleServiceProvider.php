@@ -7,7 +7,7 @@ use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\RequestVariables;
 
-class ModuleProviderService {
+class ModuleServiceProvider {
     private TemplatesService $templateService;
 
     public function __construct(){
@@ -15,7 +15,7 @@ class ModuleProviderService {
     }
 
     public function Render(){
-        $module = RequestVariables::Get("module");
+        $module = RequestVariables::Get("name");
         $template = $this->templateService->GetTemplateByName($module, "module");
 
         (bool)$returnPageContent = false;
