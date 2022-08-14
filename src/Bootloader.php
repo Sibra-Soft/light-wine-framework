@@ -16,17 +16,7 @@ use LightWine\Core\Route;
 class Bootloader {
 	private function Autoloader(){
         spl_autoload_register(function($class){
-            $type = "class";
-
-            if(strpos(strtolower($class), "model") !== false){
-                $type = "model";        // Load models
-            }elseif(strpos(strtolower($class), "enum") !== false){
-                $type = "enum";         // Load enums
-            }elseif(strpos(strtolower($class), "interfaces") !== false){
-                $type = "interface";    // Load interfaces
-            }
-
-            $includeFile = __DIR__.str_replace('\\', '/', str_replace("LightWine", "", $class)).'.'.$type.'.php';
+            $includeFile = __DIR__.str_replace('\\', '/', str_replace("LightWine", "", $class)).'.php';
             require_once ($includeFile);
         });
     }
