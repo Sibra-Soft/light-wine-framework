@@ -38,7 +38,7 @@ class Route
         ]);
     }
 
-    public static function View(string $url, int | string $template, array $options){
+    public static function View(string $url, string $template, array $options){
         array_push(self::$Routes, [
             "type" => "view",
             "method" => "GET",

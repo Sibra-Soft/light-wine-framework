@@ -60,5 +60,5 @@ interface IMysqlConnectionService
      * @param string $file The .sql file containing the query you want to execute
      * @return array The returned dataset of the executed query
      */
-    public function ExecuteQueryBasedOnFile(): array;
+    public function ExecuteQueryBasedOnFile(string $file): array;
 }
