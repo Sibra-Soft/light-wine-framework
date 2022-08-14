@@ -33,6 +33,7 @@ class Bootloader {
         Route::WebMethod("/partial.dll", "PartialServiceProvider", []);
         Route::WebMethod("/module.dll", "ModuleServiceProvider", []);
         Route::WebMethod("/component.dll", "ComponentServiceProvider", []);
+        Route::WebMethod("/resources.dll", "ResourceServiceProvider", []);
         Route::WebMethod("/images/{filename}", "ImageServiceProvider", []);
         Route::WebMethod("/res/{type}/{filename}", "ResourceServiceProvider", []);
 
