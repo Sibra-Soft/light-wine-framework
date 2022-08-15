@@ -63,24 +63,55 @@ class RoutingService implements IRoutingService
         $this->databaseConnection->AddParameter("currentDomain", $domain);
 
         $dataset = $this->databaseConnection->GetDataset("
-            SELECT
-                `name`,
-                id,
-                template_id,
-                url,
-                meta_title,
-                meta_description,
-                method,
-                type
-            FROM `site_routes`
-            WHERE (domain = ?currentDomain  OR NULLIF(domain, '') IS NULL)
-                AND published = 1
-            ORDER BY `order`
+            SELECT * FROM (
+	            SELECT
+		            routes.id,
+		            routes.`name`,
+		            routes.template_id AS datasource,
+		            routes.url,
+		            routes.meta_title,
+		            routes.meta_description,
+		            routes.method,
+		            routes.type,
+		            routes.redirect_url,
+		            routes.redirect_type,
+		            routes.`order`,
+		            1 AS group_type
+	            FROM `site_routes` AS routes
+	            WHERE (domain = ''  OR NULLIF(domain, '') IS NULL)
+				            AND published = 1
+	            UNION
+	            SELECT
+		            apis.id,
+		            apis.`name`,
+		            apis.datasource,
+		            apis.match_pattern,
+		            NULL,
+		            NULL,
+		            apis.allowed_methodes,
+		            'api',
+		            NULL,
+		            NULL,
+		            apis.`order`,
+		            2 AS group_type
+	            FROM site_rest_api AS apis
+            ) AS x
+            ORDER BY x.group_type, x.`order`
         ");
 
         foreach($dataset as $row){
-            if($row["type"] == "template-link") Route::View($row["url"], $row["template_id"], ["title" => $row["meta_title"], "description" => $row["meta_description"]]);
-            if($row["type"] == "redirect") Route::Redirect($row["url"], "http://www.google.nl");
+            if($row["type"] == "template-link") Route::View($row["url"], $row["datasource"], ["title" => $row["meta_title"], "description" => $row["meta_description"]]);
+            if($row["type"] == "redirect") Route::Redirect($row["url"], $row["redirect_url"], $row["redirect_type"]);
+
+            // Create the api controllers
+            if($row["type"] == "api"){
+                switch($row["method"]){
+                    case "GET": Route::Get($row["url"], $row["datasource"]); break;
+                    case "POST": Route::Post($row["url"], $row["datasource"]); break;
+                    case "PUT": Route::Put($row["url"], $row["datasource"]); break;
+                    case "DELETE": Route::Delete($row["url"], $row["datasource"]); break;
+                }
+            }
         }
     }
 
