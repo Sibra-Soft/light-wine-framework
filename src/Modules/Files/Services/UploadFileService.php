@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Modules\Files\Services;
 
+use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\RequestVariables;
@@ -24,8 +25,8 @@ class UploadFileService implements IUploadFileService
 
         $targetDirectory = $_SERVER["DOCUMENT_ROOT"]."/temp/uploads/";
 
-        $fileModel->fileModel->Filename = Helpers::NewGuid().".jpg";
-        $fileModel->fileModel->File = $targetDirectory.$fileModel->Filename;
+        $fileModel->Filename = Helpers::NewGuid().".jpg";
+        $fileModel->File = $targetDirectory.$fileModel->Filename;
 
         // Download the file from the specified url
         Helpers::DownloadExternalFile($url, $fileModel->File);
@@ -39,8 +40,8 @@ class UploadFileService implements IUploadFileService
     public function UploadFileFromWebform(){
         $fileModel = new FileUploadModel();
 
-        $fileModel->fileModel->File = $_FILES["file_upload"]["tmp_name"];
-        $fileModel->fileModel->Filename = Helpers::NewGuid().".jpg";
+        $fileModel->File = $_FILES["file_upload"]["tmp_name"];
+        $fileModel->Filename = Helpers::NewGuid().".jpg";
 
         $this->UploadFile($fileModel);
     }
@@ -62,15 +63,16 @@ class UploadFileService implements IUploadFileService
         $fileModel->ImageHeight = getimagesize($fileModel->File)[1];
         $fileModel->Extension = strtolower(pathinfo($fileModel->File, PATHINFO_EXTENSION));
         $fileModel->ParentFolder = (int)RequestVariables::Get("parent_folder");
+        $fileModel->UserId = (isset($_SESSION["UserId"])) ? 0 : $_SESSION["UserId"];
 
         // Add the parameters to the database connection
         $this->databaseConnection->ClearParameters();
-        $this->databaseConnection->AddParameter("user_id", $_SESSION["UserId"]);
+        $this->databaseConnection->AddParameter("user_id", $fileModel->UserId);
         $this->databaseConnection->AddParameter("content", $image);
         $this->databaseConnection->AddParameter("filename", $fileModel->Filename);
         $this->databaseConnection->AddParameter("created_by", $_SESSION["UserFullname"]);
         $this->databaseConnection->AddParameter("item_id", $fileModel->ItemId, 0);
-        $this->databaseConnection->AddParameter("type", $fileModel->ObjectType, "file");
+        $this->databaseConnection->AddParameter("type", $fileModel->ObjectType, "image");
         $this->databaseConnection->AddParameter("content_type", $fileModel->MimeType, "");
         $this->databaseConnection->AddParameter("parent_id", $fileModel->ParentFolder, 0);
 
