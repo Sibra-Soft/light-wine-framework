@@ -12,7 +12,7 @@ class Route
      */
     public static function Get(string $url, string $datasource){
         array_push(self::$Routes, [
-            "type" => "get",
+            "type" => "API_HANDLER",
             "method" => "GET",
             "url" => $url,
             "source" => $datasource
@@ -26,7 +26,7 @@ class Route
      */
     public static function Post(string $url, string $datasource){
         array_push(self::$Routes, [
-            "type" => "post",
+            "type" => "API_HANDLER",
             "method" => "POST",
             "url" => $url,
             "source" => $datasource
@@ -40,7 +40,7 @@ class Route
      */
     public static function Put(string $url, string $datasource){
         array_push(self::$Routes, [
-            "type" => "put",
+            "type" => "API_HANDLER",
             "method" => "PUT",
             "url" => $url,
             "source" => $datasource
@@ -54,7 +54,7 @@ class Route
      */
     public static function Delete(string $url, string $datasource){
         array_push(self::$Routes, [
-            "type" => "delete",
+            "type" => "API_HANDLER",
             "method" => "DELETE",
             "url" => $url,
             "source" => $datasource
