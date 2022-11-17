@@ -28,7 +28,7 @@ class Bootloader {
         // Add build-in framework routes
         Route::WebMethod("/template.dll", "TemplateServiceProvider", []);
         Route::WebMethod("/scheduler.dll", "SchedulerServiceProvider", []);
-        Route::WebMethod("/imdb.dll", "ImageServiceProvider", []);
+        Route::WebMethod("/imdb.dll", "ImdbServiceProvider", []);
         Route::WebMethod("/json.dll", "JsonServiceProvider", []);
         Route::WebMethod("/partial.dll", "PartialServiceProvider", []);
         Route::WebMethod("/module.dll", "ModuleServiceProvider", []);
