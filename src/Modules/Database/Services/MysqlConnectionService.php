@@ -21,9 +21,9 @@ class MysqlConnectionService implements IMysqlConnectionService {
     public $rowCount = 0;
     public $rowsAffected = 0;
     public $rowInsertId = 0;
+    public $mysqlQueryParameters = [];
 
     private $query = "";
-    private $mysqlQueryParameters = [];
     private $lastErrorCode = null;
     private $databaseName = "";
 

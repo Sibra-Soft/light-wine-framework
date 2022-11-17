@@ -93,8 +93,10 @@ class DatabaseHelperService implements IDatabaseHelperService {
         $this->queryBuilder->ignoreDuplicatesOnInsert = $ignoreDuplicates;
         $this->queryBuilder->Clear();
 
-        // Generate the query build on the specified parameters
+        // Generate the query based on the specified parameters
         $parameters = $this->databaseConnection->mysqlQueryParameters;
+
+        unset($parameters["?currentDatabase"]); // Remove unnecessary parameters
 
         // Check if it's a add or a update query
         if(StringHelpers::IsNullOrWhiteSpace($id)){
