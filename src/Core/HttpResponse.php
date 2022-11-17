@@ -66,9 +66,15 @@ class HttpResponse
      * @param array $querystring Querystring parameters that must be added when redirecting
      * @param int $status The code that must be used when redirecting (301: Temporary redirect, 301: Moved Permanently)
      */
-    public static function Redirect(string $url, array $querystring, int $status = 301){
+    public static function Redirect(string $url, array $querystring){
         $querystring = http_build_query($querystring);
-        header('location: '.$url.$querystring, true, $status);
+        header('location: '.$url.$querystring, true, 301);
+        exit();
+    }
+
+    public static function RedirectPermanent(string $url, array $querystring){
+        $querystring = http_build_query($querystring);
+        header('location: '.$url.$querystring, true, 302);
         exit();
     }
 

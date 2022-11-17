@@ -16,7 +16,7 @@ class ApiRequestModel {
         $this->RequestMethod = strtolower($_SERVER['REQUEST_METHOD']);
         $this->ApiFullRequestPath = $_SERVER["REQUEST_URI"];
         $this->ApiPathSegments = explode('/', $_SERVER["REQUEST_URI"]);
-        $this->ApiRequestPath = str_replace("/api", "", $this->ApiFullRequestPath);
+        $this->ApiRequestPath = $this->ApiFullRequestPath;
         $this->Headers = getallheaders();
     }
     public array $ApiPathSegments = [];

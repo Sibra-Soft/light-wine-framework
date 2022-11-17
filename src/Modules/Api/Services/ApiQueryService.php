@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Modules\Api\Services;
 
+use LightWine\Core\HttpResponse;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\QueryBuilder\Services\QueryBuilderService;
 use LightWine\Modules\Templates\Services\TemplatesService;
@@ -40,21 +41,18 @@ class ApiQueryService {
         $query = $this->templatingService->ReplaceVariablesFromStore($template);
         $this->databaseConnection->executeQuery($query);
 
-        header('Content-Type: application/json');
-        echo(json_encode(array(
-            "message" => array(
+        HttpResponse::SetReturnJson([
+            "message" => [
                 "affectedRows" => $this->databaseConnection->rowsAffected,
                 "parameters" => $this->RequestModel->Parameters
-            ),
+            ],
             "categorie" => "UPDATE",
             "code" => 200
-        )));
-        exit();
+        ]);
     }
 
     /**
      * This function selects data from a specified table based on the API request
-     * @return array
      */
     public function HandleSelectRequest(){
         $dataset = array();
@@ -71,16 +69,14 @@ class ApiQueryService {
 
         $dataset = $this->databaseConnection->getDataset($this->queryBuilderService->render());
 
-        header('Content-Type: application/json');
-        echo(json_encode(array(
-            "message" => array(
+        HttpResponse::SetReturnJson([
+            "message" => [
                 "count" => $this->databaseConnection->rowCount,
                 "data" => $dataset
-            ),
+            ],
             "categorie" => "SELECT",
             "code" => 200
-        )));
-        exit();
+        ]);
     }
 
     /**
@@ -100,16 +96,14 @@ class ApiQueryService {
 
         $this->databaseConnection->executeQuery($this->queryBuilderService->Render());
 
-        header('Content-Type: application/json');
-        echo(json_encode(array(
-            "message" => array(
+        HttpResponse::SetReturnJson([
+            "message" => [
                 "affectedRows" => $this->databaseConnection->rowsAffected,
                 "parameters" => $this->RequestModel->Parameters
-            ),
+            ],
             "categorie" => "UPDATE",
             "code" => 200
-        )));
-        exit();
+        ]);
     }
 
     /**
@@ -126,16 +120,14 @@ class ApiQueryService {
         $this->databaseConnection->ExecuteQuery($this->queryBuilderService->Render());
         $lastInsertId = $this->databaseConnection->rowInsertId;
 
-        header('Content-Type: application/json');
-        echo(json_encode(array(
+        HttpResponse::SetReturnJson([
             "message" => array(
                 "insertKey" => $lastInsertId,
                 "parameters" => $this->RequestModel->Parameters,
             ),
             "categorie" => "INSERT",
             "code" => 200
-        )));
-        exit();
+        ]);
     }
 
     /**
@@ -153,16 +145,14 @@ class ApiQueryService {
 
         $this->databaseConnection->executeQuery($this->queryBuilderService->Render());
 
-        header('Content-Type: application/json');
-        echo(json_encode(array(
+        HttpResponse::SetReturnJson([
             "message" => array(
                 "affectedRows" => $this->databaseConnection->rowsAffected,
                 "parameters" => $this->RequestModel->Parameters,
             ),
             "categorie" => "DELETE",
             "code" => 200
-        )));
-        exit();
+        ]);
     }
 }
 ?>

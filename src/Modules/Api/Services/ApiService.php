@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Modules\Api\Services;
 
+use LightWine\Core\HttpResponse;
 use LightWine\Modules\Api\Models\ApiRequestModel;
 use LightWine\Modules\Sam\Services\SamService;
 use LightWine\Core\Helpers\StringHelpers;
@@ -45,14 +46,11 @@ class ApiService
      * @param int $code The error code of the current message
      */
     private function RestServerReturnJson($message, string $categorie, int $code){
-        header('Content-Type: application/json');
-
-        echo(json_encode(array(
+        HttpResponse::SetReturnJson([
             "message" => $message,
             "categorie" => $categorie,
             "code" => $code
-        )));
-        exit();
+        ]);
     }
 
     /**
@@ -90,7 +88,7 @@ class ApiService
         $this->databaseService->GetDataset("
             SELECT
                 `id`,
-                CONCAT('/', `match_pattern`, '/') AS `match_pattern`
+                CONCAT(`match_pattern`) AS `match_pattern`
             FROM `site_rest_api`
             WHERE allowed_methodes = ?method
                 AND ?request_url REGEXP match_pattern
@@ -101,7 +99,7 @@ class ApiService
         if($this->databaseService->rowCount > 0){
             preg_match_all($this->databaseService->DatasetFirstRow("match_pattern"), $this->RequestModel->ApiRequestPath, $matches);
 
-            $routeParameters = $matches;
+            $routeParameters = (is_null($matches) ? [] : $matches);
             $routeFound = true;
             $routeId = $this->databaseService->DatasetFirstRow("id");
         }
