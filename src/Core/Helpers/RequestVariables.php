@@ -10,8 +10,14 @@ class RequestVariables
      * @return mixed The value of the variable
      */
     public static function Get(string $key, string $default = ""){
-        $postVar = $_POST[$key];
-        $getVar = $_GET[$key];
+        $postVar = "";
+        $getVar = "";
+
+        if(isset($_POST[$key])){
+            $postVar = $_POST[$key];
+        }elseif(isset($_GET[$key])){
+            $getVar = $_GET[$key];
+        }
 
         if(!StringHelpers::IsNullOrWhiteSpace($postVar)){
             return $postVar;
