@@ -27,7 +27,7 @@ class UploadFileService implements IUploadFileService
 
         $fileModel->Filename = Helpers::NewGuid().".jpg";
         $fileModel->File = $targetDirectory.$fileModel->Filename;
-
+        
         // Download the file from the specified url
         Helpers::DownloadExternalFile($url, $fileModel->File);
 
@@ -51,19 +51,17 @@ class UploadFileService implements IUploadFileService
      * @param FileUploadModel $fileModel The model containing all the details of the file
      * @return FileUploadModel The model containing the details of the uploaded file
      */
-    private function UploadFile(FileUploadModel $fileModel){
+    private function UploadFile(FileUploadModel $fileModel): FileUploadModel {
         $image = file_get_contents($fileModel->File);
-
+        
         // Add the details to the upload model
         $fileModel->ItemId = (int)RequestVariables::Get("item_id", 0);
         $fileModel->FileSize = filesize($fileModel->File);
         $fileModel->MimeType = Helpers::GetMimeType($fileModel->File);
         $fileModel->ObjectType = RequestVariables::Get("type");
-        $fileModel->ImageWidth = getimagesize($fileModel->File)[0];
-        $fileModel->ImageHeight = getimagesize($fileModel->File)[1];
         $fileModel->Extension = strtolower(pathinfo($fileModel->File, PATHINFO_EXTENSION));
         $fileModel->ParentFolder = (int)RequestVariables::Get("parent_folder");
-        $fileModel->UserId = (isset($_SESSION["UserId"])) ? 0 : $_SESSION["UserId"];
+        $fileModel->UserId = (isset($_SESSION["UserId"])) ? $_SESSION["UserId"] : 0;
 
         // Add the parameters to the database connection
         $this->databaseConnection->ClearParameters();
@@ -72,7 +70,7 @@ class UploadFileService implements IUploadFileService
         $this->databaseConnection->AddParameter("filename", $fileModel->Filename);
         $this->databaseConnection->AddParameter("created_by", $_SESSION["UserFullname"]);
         $this->databaseConnection->AddParameter("item_id", $fileModel->ItemId, 0);
-        $this->databaseConnection->AddParameter("type", $fileModel->ObjectType, "image");
+        $this->databaseConnection->AddParameter("type", $fileModel->ObjectType, "file");
         $this->databaseConnection->AddParameter("content_type", $fileModel->MimeType, "");
         $this->databaseConnection->AddParameter("parent_id", $fileModel->ParentFolder, 0);
 
