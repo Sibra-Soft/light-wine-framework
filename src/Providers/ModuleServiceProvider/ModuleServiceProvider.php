@@ -47,10 +47,12 @@ class ModuleServiceProvider {
 
         $pageObject = new $className;
         if(method_exists ($pageObject , "Init")){
-            return call_user_func(array($pageObject, 'Init'));
+            call_user_func(array($pageObject, 'Init'));
         }else{
             HttpResponse::ShowError(404, "The specified module does not contain a Page class with Init function", "Method error");
         }
+
+        return "";
     }
 }
 ?>
