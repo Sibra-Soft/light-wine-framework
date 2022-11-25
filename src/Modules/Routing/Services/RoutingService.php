@@ -79,7 +79,7 @@ class RoutingService implements IRoutingService
 		            1 AS group_type
 	            FROM `site_routes` AS routes
 	            WHERE (domain = ''  OR NULLIF(domain, '') IS NULL)
-				            AND published = 1
+                    AND published = 1
 	            UNION
 	            SELECT
 		            apis.id,
