@@ -24,20 +24,24 @@ class ImdbServiceProvider
         $searchSerieValue = RequestVariables::Get("search-serie");
         $titleId = RequestVariables::Get("title");
         $seasonNr = RequestVariables::Get("seasons");
+        $top250 = RequestVariables::Get("top250");
 
         HttpResponse::SetContentType("application/json; charset=utf-8");
 
-        header('Content-Type: ');
-        if(!StringHelpers::IsNullOrWhiteSpace($searchMovieValue)){
-            HttpResponse::SetData(json_encode($this->SearchMovie($searchMovieValue)));
+        if($top250 === "true"){
+            HttpResponse::SetData(json_encode($this->GetTop250()));
         }else{
-            if(!StringHelpers::IsNullOrWhiteSpace($searchSerieValue)){
-                HttpResponse::SetData(json_encode($this->SearchSerie($searchSerieValue)));
+            if(!StringHelpers::IsNullOrWhiteSpace($searchMovieValue)){
+                HttpResponse::SetData(json_encode($this->SearchMovie($searchMovieValue)));
             }else{
-                if(!StringHelpers::IsNullOrWhiteSpace($seasonNr)){
-                    HttpResponse::SetData(json_encode($this->GetSerieSeasonEpisodes($titleId, $seasonNr)));
+                if(!StringHelpers::IsNullOrWhiteSpace($searchSerieValue)){
+                    HttpResponse::SetData(json_encode($this->SearchSerie($searchSerieValue)));
                 }else{
-                    HttpResponse::SetData(json_encode($this->GetTitleBasedOnImdbId($titleId)));
+                    if(!StringHelpers::IsNullOrWhiteSpace($seasonNr)){
+                        HttpResponse::SetData(json_encode($this->GetSerieSeasonEpisodes($titleId, $seasonNr)));
+                    }else{
+                        HttpResponse::SetData(json_encode($this->GetTitleBasedOnImdbId($titleId)));
+                    }
                 }
             }
         }
@@ -91,6 +95,8 @@ class ImdbServiceProvider
      */
     public function GetTop250() {
         $apiResponse = $this->HandleAPIRequest("Top250Movies", "");
+
+        return $apiResponse;
     }
 
     /**
