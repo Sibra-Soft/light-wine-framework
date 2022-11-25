@@ -7,7 +7,6 @@ use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\Sam\Interfaces\ISamService;
 use LightWine\Modules\Sam\Models\SamUserRightsReturnModel;
-use LightWine\Core\Helpers\DeviceHelpers;
 use LightWine\Core\HttpResponse;
 
 class SamService implements ISamService {
@@ -32,48 +31,6 @@ class SamService implements ISamService {
         $returnModel->Role = implode(",", $_SESSION["UserRole"]);
 
         return $returnModel;
-    }
-
-    /**
-     * Checks if a specified device is registered
-     * @return bool Returns true if registered, false if not registered
-     */
-    public function CheckDeviceRegistration(): bool {
-        $this->databaseConnection->ClearParameters();
-        $this->databaseConnection->AddParameter("deviceId", DeviceHelpers::DeviceGuid($_SESSION["UserId"]));
-        $this->databaseConnection->AddParameter("userId", $_SESSION["UserId"]);
-        $this->databaseConnection->GetDataset("SELECT * FROM `_devices` WHERE device_guid = ?deviceId AND user_id = ?userId LIMIT 1;");
-        
-        if($this->databaseConnection->rowCount > 0){
-            if($this->databaseConnection->DatasetFirstRow("status") == "verified"){
-                return true;
-            }else{
-                return false;
-            }
-        }else{
-            return false;
-        }
-    }
-
-    /**
-     * Register a new device
-     * @return int The pincode that must be entered to complete the registration
-     */
-    public function RegisterDevice(): int {
-        $pincode = Helpers::GeneratePincode();
-
-        $this->databaseConnection->ClearParameters();
-        $this->databaseConnection->AddParameter("device_guid", DeviceHelpers::DeviceGuid($_SESSION["UserId"]));
-        $this->databaseConnection->AddParameter("user_id", $_SESSION["UserId"]);
-        $this->databaseConnection->AddParameter("status", 'waiting');
-        $this->databaseConnection->AddParameter("ip", DeviceHelpers::IP());
-        $this->databaseConnection->AddParameter("hostname", DeviceHelpers::Hostname());
-        $this->databaseConnection->AddParameter("os", DeviceHelpers::OS());
-        $this->databaseConnection->AddParameter("verification_pincode", $pincode);
-
-        $this->databaseConnection->helpers->UpdateOrInsertRecordBasedOnParameters("_devices", null, true);
-
-        return $pincode;
     }
 
     /**
