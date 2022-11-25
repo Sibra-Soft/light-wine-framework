@@ -173,20 +173,10 @@ class Account {
 
                 $this->returnOutput = str_replace("{{error-template}}", $errorTemplate, $this->returnOutput);
             }else{
-                if($this->samService->CheckDeviceRegistration()){
-                    if($this->component->RedirectUrl and $this->component->RedirectAfterLogin){
-                        header('location: '.$this->component->RedirectUrl);
-                    }else{
-                        $this->returnOutput  = $this->component->SuccessTemplate;
-                    }
+                if($this->component->RedirectUrl and $this->component->RedirectAfterLogin){
+                    header('location: '.$this->component->RedirectUrl);
                 }else{
-                    $registerPincode = $this->samService->RegisterDevice();
-                    $this->HandleSendVerificationCode($loginResponse, $registerPincode);
-
-                    unset($_SESSION["Checksum"]); // Logout the current user
-
-                    $errorTemplate = str_replace("{{message-internal}}", "DEVICE_NOT_VERIFIED", $errorTemplate);
-                    $this->returnOutput = str_replace("{{error-template}}", $errorTemplate, $this->returnOutput);
+                    $this->returnOutput  = $this->component->SuccessTemplate;
                 }
             }
         }else{
@@ -226,11 +216,6 @@ class Account {
         }
 
         return $mainTemplate;
-    }
-
-    private function HandleSendVerificationCode(SamLoginResponseModel $loginResponse, int $pincode){
-        $this->mailService->AssignVariable("pincode", $pincode);
-        $this->mailService->SendMailFromTemplate($loginResponse->Username, "device-verification-mail", "Moviedos apparaat verificatie");
     }
 
     /**
