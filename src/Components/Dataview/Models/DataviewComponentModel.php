@@ -1,13 +1,15 @@
 <?php
 namespace LightWine\Components\Dataview\Models;
 
+use LightWine\Components\Dataview\Enums\ComponentModes;
+
 class DataviewComponentModel
 {
-    public int $Mode = 0;
+    public int $Mode = ComponentModes::Dataview;
     public int $MaxItemsVisible = 50;
+    public int $MainQueryTemplate = 0;
+    public int $CountQueryTemplate = 0;
 
-    public string $MainQueryTemplate = "";
-    public string $CountQueryTemplate = "";
     public string $RepeatTemplate = "";
     public string $HeaderTemplate = "";
     public string $FooterTemplate = "";

@@ -90,7 +90,7 @@ class Dataview {
     private function RenderControl(): string {
         $this->templatingService->AddTemplatingVariablesToStore();
 
-        $queryTemplate = $this->templatesService->GetTemplateByName($this->component->MainQueryTemplate, "sql")->Content;
+        $queryTemplate = $this->templatesService->GetTemplateById($this->component->MainQueryTemplate)->Content;
 
         $this->RenderFiltersInQuery($this->templatingService);
 
