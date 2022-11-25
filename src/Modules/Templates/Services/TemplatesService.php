@@ -11,10 +11,12 @@ class TemplatesService implements ITemplatesService
 {
     private MysqlConnectionService $databaseConnection;
     private ConfigurationManagerService $settings;
+    public TemplateModel $returnModel;
 
     public function __construct(){
         $this->databaseConnection = new MysqlConnectionService();
         $this->settings = new ConfigurationManagerService();
+        $this->returnModel = new TemplateModel;
     }
 
     /**

@@ -79,7 +79,7 @@ class SamService implements ISamService {
     /**
      * This function start a basic authentication for the current template
      */
-    private function BasicAuthentication(){
+    public function BasicAuthentication(){
         if(!isset($_SESSION["BasicAuthChecksum"])){
             if (!isset($_SERVER['PHP_AUTH_USER'])) {
                 header('WWW-Authenticate: Basic realm="My Realm"');
@@ -115,7 +115,7 @@ class SamService implements ISamService {
      */
     public function Login(string $username, string $password): SamLoginResponseModel {
         $responseModel = new SamLoginResponseModel;
-
+        
         // Generate the function variables
         $requestPassword = hash("sha512", $password.$this->passwordBlowFish);
         $clientToken = $_SESSION["ClientToken"];

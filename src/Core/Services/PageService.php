@@ -52,6 +52,7 @@ class PageService implements IPageService
 
         // Check if a user must be loggedin
         if($template->Policies->USERS_MUST_LOGIN and !$this->samService->CheckIfUserIsLoggedin())  HttpResponse::Redirect("/", [], 301);
+        if($template->Policies->ENABLE_BASIC_AUTHENTICATION) $this->samService->BasicAuthentication();
 
         // Get the template of the page
         $pageTemplate = $this->templatingService->RenderTemplateAndDoAllReplacements($template);
