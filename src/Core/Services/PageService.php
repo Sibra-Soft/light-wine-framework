@@ -2,6 +2,7 @@
 namespace LightWine\Core\Services;
 
 use LightWine\Core\Models\PageModel;
+use LightWine\Modules\Resources\Enums\ResourceTypeEnum;
 use LightWine\Modules\Routing\Models\RouteModel;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templating\Services\TemplatingService;
@@ -65,6 +66,8 @@ class PageService implements IPageService
         $result = str_replace('{{$pageContent}}', $pageTemplate->Content, $result);
         $result = str_replace('{{$pageStylesheets}}', $this->resourceService->GenerateResourceURL("styling", $pageTemplate), $result);
         $result = str_replace('{{$pageScripts}}', $this->resourceService->GenerateResourceURL("scripts", $pageTemplate), $result);
+        $result = str_replace('{{$packagesScripts}}', $this->resourceService->GetPackages()->JavascriptPackages, $result);
+        $result = str_replace('{{$packagesStylesheets}}', $this->resourceService->GetPackages()->CssPackages, $result);
 
         $pageModel->Content = $result;
         $pageModel->SizeInBytes = strlen($result);

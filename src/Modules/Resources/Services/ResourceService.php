@@ -5,6 +5,7 @@ use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
+use LightWine\Modules\Resources\Models\ResourcePackagesReturnModel;
 use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templates\Models\TemplateModel;
@@ -32,10 +33,26 @@ class ResourceService implements IResourceService {
     }
 
     /**
-     * This function downloads all the external content from the specified CDN servers
+     * Gets the specified package form the CMS based on the specified type
+     * @param string $type The type of packages you want to get (CSS, JS)
+     * @return ResourcePackagesReturnModel Model containg the scripts for styling and javascript
      */
-    public function DownloadFromDeploymentServer(){
+    public function GetPackages(): ResourcePackagesReturnModel {
+        $returnModel = new ResourcePackagesReturnModel;
 
+        $this->databaseConnection->ClearParameters();
+
+        $dataset = $this->databaseConnection->GetDataset("SELECT * FROM `site_packages` ORDER BY `order`");
+
+        foreach($dataset as $row){
+            if($row["type"] === "javascript"){
+                $returnModel->JavascriptPackages .= '<script src="'.$row["link"].'" type="text/javascript"></script>';
+            }else{
+                $returnModel->CssPackages .= '<link rel="stylesheet" type="text/css" href="'.$row["link"].'" />';
+            }
+        }
+
+        return $returnModel;
     }
 
     /**
@@ -52,8 +69,6 @@ class ResourceService implements IResourceService {
 
             // Check if a external content template has been specified
             $currentEnvironment = $this->settings->GetAppSetting("Environment");
-
-            $this->DownloadFromDeploymentServer();
 
             // Get masterpage content from the database
             $dataset = $this->databaseConnection->GetDataset("
@@ -105,11 +120,11 @@ class ResourceService implements IResourceService {
             $filename = $this->templateService->GetTemplateByName($filename, $type)->Id;
         }
 
-        $currentCacheFolder = $this->settings->GetAppSetting("CacheFolder", "/cache/");
-        $cacheFilename = $_SERVER["DOCUMENT_ROOT"].$currentCacheFolder.$filename;
+        //$currentCacheFolder = $this->settings->GetAppSetting("CacheFolder", "/cache/");
+        $cacheFilename = $_SERVER["DOCUMENT_ROOT"]."/cache/".$filename;
 
         // Create the cache folder if it not exists
-        Helpers::CreateFolderIfNotExists($_SERVER["DOCUMENT_ROOT"].$currentCacheFolder);
+        Helpers::CreateFolderIfNotExists($_SERVER["DOCUMENT_ROOT"]."/cache/");
 
         // If we request a masterpage file, just get the content and return it.
         if($filename == "masterpage.js" or $filename == "masterpage.css"){
@@ -141,7 +156,7 @@ class ResourceService implements IResourceService {
             $returnContent = Helpers::GetFileContent($cacheFilename);
         }
 
-        if($type === ResourceTypeEnum::CSS){
+        if($type == ResourceTypeEnum::CSS){
             return HttpContextHelpers::MinifyStylesheet($returnContent);
         }else{
             $returnContent = $this->templatingService->ReplaceContent($returnContent);
@@ -155,7 +170,7 @@ class ResourceService implements IResourceService {
      * @return string The generated resource URLs
      */
     public function GenerateResourceURL(string $type, TemplateModel $template): string {
-        if($type == "scripts"){
+        if($type === "scripts"){
             $returnTemplate = "";
             $ids = str_replace(",", "_", $template->Settings->ScriptResources);
 
