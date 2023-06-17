@@ -36,6 +36,7 @@ class Bootloader {
         Route::WebMethod("/resources.dll", "ResourceServiceProvider", []);
         Route::WebMethod("/images/{filename}", "ImageServiceProvider", []);
         Route::WebMethod("/res/{type}/{filename}", "ResourceServiceProvider", []);
+        Route::WebMethod("/robots.txt", "RobotsTextServiceProvider", []);
 
         // Add variables
         if(!array_key_exists("CsrfToken", $_SESSION)) $_SESSION["CsrfToken"]  = uniqid(time());
