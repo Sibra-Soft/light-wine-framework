@@ -27,6 +27,7 @@ Below you find a example of a configuration file for a website/webapplication cr
   "Connections": {
     // Here you can add connectionstring of your databases
   },
+  "AutoUpdate": false, // Specifies if the framework must be automatically updated
   "CacheFolder": "~/cache/", // Specifies the location of the cache folder
   "Environment": "dev", // Specifies the current enviroment (dev, test or live)
   "Tracing": false, // Enables the tracing of the framework for easy debugging
