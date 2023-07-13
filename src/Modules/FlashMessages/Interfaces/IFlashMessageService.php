@@ -1,5 +1,5 @@
 <?php
-namespace LightWine\Modules\FlasMessages\Interfaces;
+namespace LightWine\Modules\FlashMessages\Interfaces;
 
 interface IFlashMessageService
 {
@@ -12,7 +12,7 @@ interface IFlashMessageService
     public function NewFlashMessage(string $name, string $message, string $type = "info");
 
     /**
-     * Gets a specified message
+     * Gets a specified message from the current session
      * @param string $name The name of the message to show
      */
     public function GetFlashMessage(string $name);
