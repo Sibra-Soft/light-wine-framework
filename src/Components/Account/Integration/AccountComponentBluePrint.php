@@ -48,4 +48,13 @@ class AccountComponentBluePrint
         "Group" => "General",
         "Description" => "If set the user will be redirected to the specified url when loggedin"
     ];
+
+    public array $MainTemplate = [
+        "Caption" => "Main template",
+        "Mode" => "*",
+        "Tab" => "General",
+        "Group" => "General",
+        "Description" => "",
+        "Field" => "codemirror"
+    ];
 }

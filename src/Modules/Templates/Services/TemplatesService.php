@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Modules\Templates\Services;
 
+use LightWine\Modules\Cache\Services\CacheService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Database\Enums\DataTypesEnum;
 use LightWine\Modules\Templates\Models\TemplateModel;
@@ -12,10 +13,12 @@ class TemplatesService implements ITemplatesService
     private MysqlConnectionService $databaseConnection;
     private ConfigurationManagerService $settings;
     public TemplateModel $returnModel;
+    public CacheService $cacheService;
 
     public function __construct(){
         $this->databaseConnection = new MysqlConnectionService();
         $this->settings = new ConfigurationManagerService();
+        $this->cacheService = new CacheService();
         $this->returnModel = new TemplateModel;
     }
 
@@ -54,8 +57,6 @@ class TemplatesService implements ITemplatesService
             $this->returnModel->Settings->CachingHours = $dbConnection->DatasetFirstRow("caching_hours", DataTypesEnum::Integer);
             $this->returnModel->Settings->StylingResources = $dbConnection->DatasetFirstRow("stylesheets", DataTypesEnum::String);
             $this->returnModel->Settings->ScriptResources = $dbConnection->DatasetFirstRow("scripts", DataTypesEnum::String);
-
-            // Todo: Generate cache of template
 
             $policies = explode(",", $dbConnection->DatasetFirstRow("policies", DataTypesEnum::String));
             $this->GetTemplatePolicies($policies);

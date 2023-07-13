@@ -93,7 +93,7 @@ class ApiQueryService {
                 $this->queryBuilderService->Where(QueryExtenderEnum::AndExtender, $parameter["Name"], QueryOperatorsEnum::EqualTo, $parameter["Value"]);
             }
         }
-
+        
         $this->databaseConnection->executeQuery($this->queryBuilderService->Render());
 
         HttpResponse::SetReturnJson([

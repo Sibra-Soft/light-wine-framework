@@ -65,11 +65,9 @@ class ResourceService implements IResourceService {
             $this->contentCSS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.css");
             $this->contentJS = Helpers::GetFileContent($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js");
         }else{
-            Helpers::CreateFolderIfNotExists("cache/external/");
-
             // Check if a external content template has been specified
             $currentEnvironment = $this->settings->GetAppSetting("Environment");
-
+            
             // Get masterpage content from the database
             $dataset = $this->databaseConnection->GetDataset("
                 SELECT
@@ -91,7 +89,7 @@ class ResourceService implements IResourceService {
                     $this->contentCSS .= $row["content"];
                 }
             }
-
+            
             if(!file_exists($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js")){
                 file_put_contents($_SERVER["DOCUMENT_ROOT"]."/cache/masterpage.js", $this->contentJS);
             }

@@ -1,10 +1,10 @@
 <?php
 namespace LightWine\Modules\Templating\Services;
 
-use LightWine\Modules\Templating\Services\BindingsService;
-use LightWine\Modules\Templating\Models\BindingReturnModel;
 use LightWine\Core\Helpers\DeviceHelpers;
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Modules\Templating\Services\BindingsService;
+use LightWine\Modules\Templating\Models\BindingReturnModel;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templates\Models\TemplateModel;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
@@ -14,6 +14,7 @@ use LightWine\Modules\Templating\Interfaces\ITemplatingService;
 use LightWine\Components\DeviceVerification\DeviceVerification;
 use LightWine\Components\Dataview\Dataview;
 use LightWine\Components\Account\Account;
+use LightWine\Components\ShoppingBasket\ShoppingBasket;
 
 use \DateTime;
 
@@ -202,6 +203,7 @@ class TemplatingService implements ITemplatingService
                     case "device-verification": $myControl = new DeviceVerification($controlId); $controlContent = $myControl->Init(); break;
                     case "dataview": $myControl = new Dataview($controlId); $controlContent = $myControl->Init(); break;
                     case "account": $myControl = new Account($controlId); $controlContent = $myControl->Init(); break;
+                    case "shopping-basket": $myControl = new ShoppingBasket($controlId); $controlContent = $myControl->Init(); break;
                 }
             }
 
@@ -271,7 +273,7 @@ class TemplatingService implements ITemplatingService
                     break;
 
                 case "@money":
-                    $tempContent = $this->ReplaceVariable($variable, "&euro; ".str_replace(".", ",", $commandValue), $tempContent);
+                    $tempContent = $this->ReplaceVariable($variable, "&euro; ".(float)$commandValue, $tempContent);
                     break;
 
                 case "@urldecode":

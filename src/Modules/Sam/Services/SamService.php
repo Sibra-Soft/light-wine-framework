@@ -26,7 +26,7 @@ class SamService implements ISamService {
      */
     public function GetUserRightsAssignment(): SamUserRightsReturnModel {
         $returnModel = new SamUserRightsReturnModel;
-
+        
         $returnModel->Username = $_SESSION["Username"];
         $returnModel->Role = implode(",", $_SESSION["UserRole"]);
 
