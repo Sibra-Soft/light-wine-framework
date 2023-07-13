@@ -1,12 +1,13 @@
 <?php
-namespace LightWine\Modules\SiteExtensions\Services;
+namespace LightWine\Modules\SiteModule\Services;
 
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\HttpResponse;
+use LightWine\Modules\SiteModule\Interfaces\ISiteModuleService;
 use LightWine\Modules\Templates\Services\TemplatesService;
 
-class SiteExtensionsService
+class SiteModuleService implements ISiteModuleService
 {
     private TemplatesService $templateService;
 
@@ -16,9 +17,9 @@ class SiteExtensionsService
 
     /**
      * Run site extensions from the cms
-     * @param string $name The name of the extension you want to run
+     * @param string $name The name of the module you want to run
      */
-    public function RunExtension(string $name){
+    public function RunModule(string $name){
         $template = $this->templateService->GetTemplateByName($name, "module");
 
         (bool)$returnPageContent = false;

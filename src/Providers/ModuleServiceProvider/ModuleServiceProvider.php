@@ -1,19 +1,20 @@
 <?php
 namespace LightWine\Providers\ModuleServiceProvider;
 
-use LightWine\Modules\SiteExtensions\Services\SiteExtensionsService;
+use LightWine\Core\Helpers\RequestVariables;
+use LightWine\Modules\SiteModule\Services\SiteModuleService;
 
 class ModuleServiceProvider {
-    private SiteExtensionsService $siteExtensionsService;
+    private SiteModuleService $siteExtensionsService;
 
     public function __construct(){
-        $this->siteExtensionsService = new SiteExtensionsService();
+        $this->siteExtensionsService = new SiteModuleService();
     }
 
     public function Render(){
         $extName = RequestVariables::Get("name");
         
-        echo($this->siteExtensionsService->RunExtension($extName));
+        echo($this->siteExtensionsService->RunModule($extName));
     }
 }
 ?>
