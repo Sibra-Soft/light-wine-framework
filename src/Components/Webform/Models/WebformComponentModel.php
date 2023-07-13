@@ -3,10 +3,9 @@ namespace LightWine\Components\Webform\Models;
 
 class WebformComponentModel
 {
-    public int $UseFormId = 0;
-
-    public string $FormHtml = "";
+    public int $FormId = 0;
+    public int $MailTemplate = 0;
 
     public bool $SendMail = false;
-    public bool $SaveToDatabase = false;
+    public bool $SaveToDatabase = true;
 }
