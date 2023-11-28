@@ -1,20 +1,58 @@
 <?php
 namespace LightWine\Providers\ModuleServiceProvider;
 
+use LightWine\Modules\Templates\Services\TemplatesService;
+use LightWine\Core\HttpResponse;
+use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\RequestVariables;
-use LightWine\Modules\SiteModule\Services\SiteModuleService;
 
 class ModuleServiceProvider {
-    private SiteModuleService $siteExtensionsService;
+    private TemplatesService $templateService;
 
     public function __construct(){
-        $this->siteExtensionsService = new SiteModuleService();
+        $this->templateService = new TemplatesService();
     }
 
     public function Render(){
-        $extName = RequestVariables::Get("name");
-        
-        echo($this->siteExtensionsService->RunModule($extName));
+        $module = RequestVariables::Get("name");
+        $template = $this->templateService->GetTemplateByName($module, "module");
+
+        (bool)$returnPageContent = false;
+
+        if(!$template->Found){
+            HttpResponse::ShowError(404, "The specified module or method could not be found", "Method not found");
+        }
+
+        $template = $template->Content;
+        preg_match_all('/@import\((\'.*?\')\)/', $template, $matches);
+        foreach($matches[0] as $variable){
+            $variableName = StringHelpers::StringBetween($variable, "@", "(");
+            $variableValue = str_replace("'", "", StringHelpers::StringBetween($variable, "(", ")"));
+
+            if($variableValue === "ReturnContent"){
+                $returnPageContent = true;
+                $variableValue = str_replace('/', '\\', $variableValue);
+                $template = str_replace($variable, "", $template);
+            }else{
+                $variableValue = str_replace('/', '\\', $variableValue);
+                $template = str_replace($variable, "use ".$variableValue.";", $template);
+            }
+        }
+
+        $className = "Page".Helpers::RandomInteger(0, 100);
+        $template = str_replace("class Page", "class ".$className, $template);
+
+        eval($template);
+
+        $pageObject = new $className;
+        if(method_exists ($pageObject , "Init")){
+            call_user_func(array($pageObject, 'Init'));
+        }else{
+            HttpResponse::ShowError(404, "The specified module does not contain a Page class with Init function", "Method error");
+        }
+
+        return "";
     }
 }
 ?>
