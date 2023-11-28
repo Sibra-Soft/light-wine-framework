@@ -22,7 +22,6 @@ class ApiRequestModel {
     public array $ApiPathSegments = [];
     public array $Headers = [];
     public array $Parameters = [];
-    public array $AllowedMethodes = [];
     public array $RouteParameters = [];
 
     public string $RequestMethod = "";

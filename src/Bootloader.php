@@ -1,6 +1,7 @@
 <?php
 namespace LightWine;
 
+use LightWine\Core\Route;
 use LightWine\Core\Services\ServerService;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\StringHelpers;
@@ -11,7 +12,6 @@ use \Exception;
 use \TypeError;
 use \Error;
 use \DateInterval;
-use LightWine\Core\Route;
 
 class Bootloader {
 	private function Autoloader(){
@@ -25,18 +25,23 @@ class Bootloader {
      * Runs before request handeling
      */
     private function BeforeRequest(){
-        // Add build-in framework routes
-        Route::WebMethod("/template.dll", "TemplateServiceProvider", []);
-        Route::WebMethod("/scheduler.dll", "SchedulerServiceProvider", []);
-        Route::WebMethod("/imdb.dll", "ImdbServiceProvider", []);
-        Route::WebMethod("/json.dll", "JsonServiceProvider", []);
-        Route::WebMethod("/partial.dll", "PartialServiceProvider", []);
-        Route::WebMethod("/module.dll", "ModuleServiceProvider", []);
-        Route::WebMethod("/component.dll", "ComponentServiceProvider", []);
-        Route::WebMethod("/resources.dll", "ResourceServiceProvider", []);
-        Route::WebMethod("/images/{filename}", "ImageServiceProvider", []);
-        Route::WebMethod("/res/{type}/{filename}", "ResourceServiceProvider", []);
-        Route::WebMethod("/robots.txt", "RobotsTextServiceProvider", []);
+        // Add framework routes
+        Route::Get("provider.scheduler", "/scheduler.dll", "@SchedulerServiceProvider", "controller");
+        Route::Get("provider.component", "/component.dll", "@ComponentServiceProvider", "controller");
+        Route::Get("provider.images", "/images/{filename}", "@ImageServiceProvider", "controller");
+        Route::Get("provider.resources", "/res/{type}/{filename}", "@ResourceServiceProvider", "controller");
+
+        Route::Post("provider.modals", "/modal.dll", "@ModalServiceProvider", "controller");
+        Route::Post("provider.partial", "/partial.dll", "@PartialServiceProvider", "controller");
+        Route::Post("provider.module", "/module.dll", "@ModuleServiceProvider", "controller");
+        Route::Post("provider.templates", "/template.dll", "@TemplateServiceProvider", "controller");
+        Route::Post("provider.imdb", "/imdb.dll", "@ImdbServiceProvider", "controller");
+        Route::Post("provider.json", "/json.dll", "@JsonServiceProvider", "controller");
+
+        // Add framework route parameters
+        Route::RegisterRouteParameter("get@provider.images", "filename", "string", false, true);
+        Route::RegisterRouteParameter("get@provider.resources", "type", "string", false, true);
+        Route::RegisterRouteParameter("get@provider.resources", "filename", "string", false, true);
 
         // Add variables
         if(!array_key_exists("CsrfToken", $_SESSION)) $_SESSION["CsrfToken"]  = uniqid(time());
