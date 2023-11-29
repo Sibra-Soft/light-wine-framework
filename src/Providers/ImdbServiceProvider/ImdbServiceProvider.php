@@ -1,16 +1,20 @@
 <?php
 namespace LightWine\Providers\ImdbServiceProvider;
 
+use LightWine\Core\Helpers\RequestVariables;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Core\Helpers\Helpers;
-use LightWine\Providers\ImdbServiceProvider\Models\ImdbApiReturnModel;
-use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
-use LightWine\Core\Helpers\RequestVariables;
 use LightWine\Core\HttpResponse;
+use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
+use LightWine\Providers\ImdbServiceProvider\Interfaces\IImdbServiceProvider;
+use LightWine\Providers\ImdbServiceProvider\Models\ImdbApiReturnModel;
+use LightWine\Providers\ImdbServiceProvider\Models\ImdbSearchModel;
 
-class ImdbServiceProvider
+class ImdbServiceProvider implements IImdbServiceProvider
 {
     private ConfigurationManagerService $settings;
+
+    private string $ApiKey;
 
     public function __construct(){
         $this->settings = new ConfigurationManagerService();
@@ -20,48 +24,93 @@ class ImdbServiceProvider
      * Starts the required action based on the specified request variables
      */
     public function Render(){
-        $searchMovieValue = RequestVariables::Get("search-movie");
-        $searchSerieValue = RequestVariables::Get("search-serie");
-        $titleId = RequestVariables::Get("title");
-        $seasonNr = RequestVariables::Get("seasons");
-        $top250 = RequestVariables::Get("top250");
+        $this->ApiKey = $this->settings->GetAppSetting("imdb")["omdb_api_key"];
 
-        HttpResponse::SetContentType("application/json; charset=utf-8");
+        if(StringHelpers::IsNullOrWhiteSpace($this->ApiKey)){
+            Throw new \Exception("You must specify a api key in order to use this service");
+        }
 
-        if($top250 === "true"){
-            HttpResponse::SetData(json_encode($this->GetTop250()));
-        }else{
-            if(!StringHelpers::IsNullOrWhiteSpace($searchMovieValue)){
-                HttpResponse::SetData(json_encode($this->SearchMovie($searchMovieValue)));
+        // Search a movie
+        if(!StringHelpers::IsNullOrWhiteSpace(RequestVariables::Get("search_movie"))){
+            HttpResponse::SetReturnJson($this->SearchMovie(RequestVariables::Get("search_movie")));
+        }
+
+        // Search a serie
+        if(!StringHelpers::IsNullOrWhiteSpace(RequestVariables::Get("search_serie"))){
+            HttpResponse::SetReturnJson($this->SearchSerie(RequestVariables::Get("search_serie")));
+        }
+
+        // Get title details based on imdb id
+        if(!StringHelpers::IsNullOrWhiteSpace(RequestVariables::Get("imdb_id"))){
+            HttpResponse::SetReturnJson((array)$this->GetTitleBasedOnImdbId(RequestVariables::Get("imdb_id")));
+        }
+
+        // Get list of episodes
+        if(!StringHelpers::IsNullOrWhiteSpace(RequestVariables::Get("imdb_serie"))){
+            $serieRequestParam = RequestVariables::Get("imdb_serie");
+
+            if(!StringHelpers::Contains($serieRequestParam, "_")){
+                throw new \Exception("Parameter syntax error");
+            }
+
+            $serieId = StringHelpers::SplitString($serieRequestParam, "_", 0);
+            $serieSeason = StringHelpers::SplitString($serieRequestParam, "_", 1);
+
+            if($serieSeason === "*"){
+                $seasonsParam = RequestVariables::Get("seasons");
+                HttpResponse::SetReturnJson($this->GetSerieEpisodes($serieId, explode(",", $seasonsParam)));
             }else{
-                if(!StringHelpers::IsNullOrWhiteSpace($searchSerieValue)){
-                    HttpResponse::SetData(json_encode($this->SearchSerie($searchSerieValue)));
-                }else{
-                    if(!StringHelpers::IsNullOrWhiteSpace($seasonNr)){
-                        HttpResponse::SetData(json_encode($this->GetSerieSeasonEpisodes($titleId, $seasonNr)));
-                    }else{
-                        HttpResponse::SetData(json_encode($this->GetTitleBasedOnImdbId($titleId)));
-                    }
-                }
+                HttpResponse::SetReturnJson($this->GetSeasonEpisodes($serieId, $serieSeason));
             }
         }
 
-        exit();
+        return "Error";
     }
 
     /**
-     * Handels the request for the API
-     * @param string $function The name of the function you want to request
-     * @param string $id The title id
-     * @return array Array of information returned by the API
+     * Generates the querystring required for the omdb.com api
+     * @param ImdbSearchModel $model The model containing the details of the request
+     * @return string The generated querystring
      */
-    private function HandleAPIRequest(string $function, string $id): array {
-        $key = $this->settings->GetAppSetting("imdb")["api_key"];
+    private function GenerateQuerystringBasedOnModel(ImdbSearchModel $model): string {
+        $queryStringBuilder = [];
 
+        foreach($model as $key => $value){
+            if(StringHelpers::IsNullOrWhiteSpace($value)){
+                continue;
+            }
+
+            // Check if serie details is required
+            if($key === "ShowSerieDetails" and $value == 1) array_push($queryStringBuilder, "detail=full");
+
+            switch($key){
+                case "ImdbId_I": array_push($queryStringBuilder, "i=".urlencode($value)); break;
+                case "ImdbTitle_T": array_push($queryStringBuilder, "t=".$value); break;
+                case "ImdbSearch_S": array_push($queryStringBuilder, "s=".urlencode($value)); break;
+                case "Type": array_push($queryStringBuilder, "type=".$value); break;
+                case "Year": array_push($queryStringBuilder, "y=".$value); break;
+                case "PlotType": array_push($queryStringBuilder, "plot=".$value); break;
+                case "ResponseType": array_push($queryStringBuilder, "r=".$value); break;
+                case "Version": array_push($queryStringBuilder, "v=".$value); break;
+                case "Season": array_push($queryStringBuilder, "season=".$value); break;
+            }
+        }
+
+        return implode("&", $queryStringBuilder);
+    }
+
+    /**
+     * Handle the request to the api
+     * @param ImdbSearchModel $model A model containg all the details of the request
+     * @return array A array containg the response of the api
+     */
+    private function HandleRequest(ImdbSearchModel $model): array {
         $curl = curl_init();
 
+        $queryString = $this->GenerateQuerystringBasedOnModel($model);
+
         curl_setopt_array($curl, array(
-          CURLOPT_URL => "https://imdb-api.com/nl/API/".$function."/".$key."/".$id,
+          CURLOPT_URL => "https://www.omdbapi.com/?apikey=".$this->ApiKey."&".$queryString,
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => "",
           CURLOPT_MAXREDIRS => 10,
@@ -80,38 +129,43 @@ class ImdbServiceProvider
     }
 
     /**
-     * Gets the episodes of a specified TV serie season
-     * @param string $imdbId The imdb.com TV serie id
-     * @param int $season The season the episodes must be downloaded from
-     * @return array A array of episodes of the specifid season
+     * Gets the episodes of a specified imdb serie
+     * @param string $imdbId The imdb.com id of the serie
+     * @param int $season The season you want to get the episodes of
+     * @return array Array containing all the episodes of the serie
      */
-    public function GetSerieSeasonEpisodes(string $imdbId, int $season){
-        $apiResponse = $this->HandleAPIRequest("SeasonEpisodes", $imdbId."/".$season);
-        return $apiResponse;
-    }
+    public function GetSeasonEpisodes(string $imdbId, int $season): array {
+        $searchModel = new ImdbSearchModel;
 
-    /**
-     * Gets the imdb.com top250 movie list
-     */
-    public function GetTop250() {
-        $apiResponse = $this->HandleAPIRequest("Top250Movies", "");
+        $searchModel->ImdbId_I = $imdbId;
+        $searchModel->ShowSerieDetails = true;
+        $searchModel->Season = $season;
+
+        $apiResponse = $this->HandleRequest($searchModel);
 
         return $apiResponse;
     }
 
     /**
-     * Gets the episodes of a specified TV serie season
-     * @param string $imdbId The imdb.com TV serie id
-     * @param int $season The season the episodes must be downloaded from
-     * @return array A array of episodes of the specifid season
+     * Gets all the episodes of a specified serie and seasons
+     * @param string $imdbId The imdb.com id of the serie
+     * @param array $seasons The seasons you want to get the episodes of
+     * @return array Array containing all the episodes of the serie
      */
-    public function GetSerieMultipleSeasonEpisodes(string $imdbId, array $seasons){
-        $seasonsEpisodeList= [];
+    public function GetSerieEpisodes(string $imdbId, array $seasons): array {
+        $seasonsEpisodeList = [];
 
         foreach($seasons as $season){
-            $apiResponse = $this->HandleAPIRequest("SeasonEpisodes", $imdbId."/".$season);
+            $searchModel = new ImdbSearchModel;
 
-            array_push($seasonsEpisodeList, $apiResponse["episodes"]);
+            $searchModel->ImdbId_I = $imdbId;
+            $searchModel->ShowSerieDetails = true;
+            $searchModel->Season = $season;
+
+            $apiResponse = $this->HandleRequest($searchModel);
+
+            array_push($seasonsEpisodeList, ["Season_".$season => $apiResponse["Episodes"]]);
+            sleep(1);
         }
 
         return $seasonsEpisodeList;
@@ -122,8 +176,14 @@ class ImdbServiceProvider
      * @param string $name The name of the serie to search for
      * @return array A array containing all the results of the search
      */
-    public function SearchSerie(string $name){
-        $apiResponse = $this->HandleAPIRequest("SearchSeries", $name);
+    public function SearchSerie(string $name): array {
+        $searchModel = new ImdbSearchModel;
+
+        $searchModel->ImdbSearch_S = $name;
+        $searchModel->Type = "series";
+
+        $apiResponse = $this->HandleRequest($searchModel);
+
         return $apiResponse;
     }
 
@@ -132,8 +192,14 @@ class ImdbServiceProvider
      * @param string $name The name of the movie to search for
      * @return array A array containing all the results of the search
      */
-    public function SearchMovie(string $name){
-        $apiResponse = $this->HandleAPIRequest("SearchMovie", $name);
+    public function SearchMovie(string $name): array {
+        $searchModel = new ImdbSearchModel;
+
+        $searchModel->ImdbSearch_S = $name;
+        $searchModel->Type = "movie";
+
+        $apiResponse = $this->HandleRequest($searchModel);
+
         return $apiResponse;
     }
 
@@ -144,44 +210,35 @@ class ImdbServiceProvider
      */
     public function GetTitleBasedOnImdbId(string $imdbId) : ImdbApiReturnModel {
         $returnModel = new ImdbApiReturnModel;
-        $apiResponse = $this->HandleAPIRequest("Title", $imdbId);
+        $searchModel = new ImdbSearchModel();
 
-        $returnModel->Id = $apiResponse["id"];
-        $returnModel->CoverImage = $apiResponse["image"];
-        $returnModel->RuntimeMins = (StringHelpers::IsNullOrWhiteSpace($apiResponse["runtimeMins"]) ? 0 : $apiResponse["runtimeMins"]);
-        $returnModel->Plot = (StringHelpers::IsNullOrWhiteSpace($apiResponse["plot"]) ? "" : $apiResponse["plot"]);
-        $returnModel->PlotLocal = $apiResponse["plotLocal"];
-        $returnModel->Year = $apiResponse["year"];
-        $returnModel->Title = $apiResponse["title"];
-        $returnModel->ActorList = $apiResponse["actorList"];
-        $returnModel->DirectorList = $apiResponse["directorList"];
-        $returnModel->GenreList = $apiResponse["genreList"];
-        $returnModel->ImdbRating = (StringHelpers::IsNullOrWhiteSpace($apiResponse["imDbRating"]) ? 0 : $apiResponse["imDbRating"]);
-        $returnModel->Tagline = (StringHelpers::IsNullOrWhiteSpace($apiResponse["tagline"]) ? "" : $apiResponse["tagline"]);
-        $returnModel->ContentRating = (StringHelpers::IsNullOrWhiteSpace($apiResponse["contentRating"])? "" : $apiResponse["contentRating"]);
-        $returnModel->StarList = $apiResponse["starList"];
-        $returnModel->Countries = $apiResponse["countries"];
-        $returnModel->CountryList = $apiResponse["countryList"];
-        $returnModel->LanguageList = $apiResponse["languageList"];
-        $returnModel->ObjectType = $apiResponse["type"];
-        $returnModel->Languages = $apiResponse["languages"];
+        $searchModel->ImdbId_I = $imdbId;
 
-        // Only for TV series
-        if($returnModel->ObjectType === "TVSeries"){
-            $returnModel->SeasonList = $apiResponse["tvSeriesInfo"]["seasons"];
-        }
+        $apiResponse = $this->HandleRequest($searchModel);
 
-        // Generate small cover image URL
-        $coverImageAt = str_repeat("@", substr_count($returnModel->CoverImage, '@'));
-        $smallCoverImageUrl = StringHelpers::StripAfterString($returnModel->CoverImage, "@");
-        $smallCoverImageUrl = $smallCoverImageUrl.$coverImageAt."._V1_SX300.jpg";
-        $returnModel->CoverImageSmall = $smallCoverImageUrl;
+        // Get details
+        $returnModel->Title = $apiResponse["Title"];
+        $returnModel->Id = $apiResponse["imdbID"];
+        $returnModel->Year = $apiResponse["Year"];
+        $returnModel->RuntimeMins = $apiResponse["Runtime"];
+        $returnModel->GenreList = explode(",", $apiResponse["Genre"]);
+        $returnModel->CountryList = explode(",", $apiResponse["Country"]);
+        $returnModel->DirectorList = explode(",", $apiResponse["Director"]);
+        $returnModel->ActorList = explode(",", $apiResponse["Actors"]);
+        $returnModel->LanguageList = explode(",", $apiResponse["Language"]);
+        $returnModel->CoverImage = $apiResponse["Poster"];
+        $returnModel->ImdbRating = floatval($apiResponse["Metascore"]["imdbRating"]);
+        $returnModel->ObjectType = $apiResponse["Type"];
+        $returnModel->ContentRating = $apiResponse["Rated"];
+        $returnModel->Plot = $apiResponse["Plot"];
+        $returnModel->NumberOfSeasons = $apiResponse["totalSeasons"];
 
-        $returnModel->FirstLanguage = Helpers::FirstOrDefault($returnModel->LanguageList)["value"];
-        $returnModel->FirstCountry = Helpers::FirstOrDefault($returnModel->CountryList)["value"];
-        $returnModel->FirstActor = Helpers::FirstOrDefault($returnModel->StarList)["name"];
-        $returnModel->FirstDirector = Helpers::FirstOrDefault($returnModel->DirectorList)["name"];
-        $returnModel->FirstGenre = Helpers::FirstOrDefault($returnModel->GenreList)["value"];
+        // Get first in list of items
+        $returnModel->FirstActor = Helpers::FirstOrDefault($returnModel->ActorList);
+        $returnModel->FirstCountry = Helpers::FirstOrDefault($returnModel->CountryList);
+        $returnModel->FirstDirector = Helpers::FirstOrDefault($returnModel->DirectorList);
+        $returnModel->FirstLanguage = Helpers::FirstOrDefault($returnModel->LanguageList);
+        $returnModel->FirstGenre = Helpers::FirstOrDefault($returnModel->GenreList);
 
         return $returnModel;
     }

@@ -6,10 +6,9 @@ use LightWine\Providers\ImdbServiceProvider\Models\ImdbApiReturnModel;
 interface IImdbServiceProvider
 {
     public function Render();
-    public function GetSerieSeasonEpisodes(string $imdbId, int $season);
-    public function GetSerieMultipleSeasonEpisodes(string $imdbId, array $seasons);
-    public function SearchSerie(string $name);
-    public function SearchMovie(string $name);
-    public function GetTitleBasedOnImdbId(string $imdbId):ImdbApiReturnModel;
-    public function GetTop250();
+    public function GetSeasonEpisodes(string $imdbId, int $season): array;
+    public function GetSerieEpisodes(string $imdbId, array $seasons): array;
+    public function SearchSerie(string $name): array;
+    public function SearchMovie(string $name): array;
+    public function GetTitleBasedOnImdbId(string $imdbId) : ImdbApiReturnModel;
 }

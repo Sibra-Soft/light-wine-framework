@@ -6,10 +6,7 @@ class ImdbApiReturnModel
     public string $Id = "";
     public string $Title = "";
     public string $Plot = "";
-    public string $PlotLocal = "";
-    public string $Tagline = "";
     public string $CoverImage = "";
-    public string $CoverImageSmall = "";
     public string $ContentRating = "";
     public string $Countries = "";
     public string $ObjectType = "";
@@ -17,14 +14,13 @@ class ImdbApiReturnModel
 
     public int $Year = 0;
     public int $RuntimeMins = 0;
+    public int $NumberOfSeasons = 0;
 
     public array $DirectorList = [];
-    public array $StarList = [];
     public array $ActorList = [];
     public array $GenreList = [];
     public array $CountryList = [];
     public array $LanguageList = [];
-    public array $SeasonList = [];
 
     public string $FirstDirector = "";
     public string $FirstActor = "";
