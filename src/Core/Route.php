@@ -27,7 +27,7 @@ class Route
         foreach($parts as $part){
             if(preg_match("/(?<=\{).+?(?=\})/", $part, $matches)){
                 foreach($matches as $match){
-                    $part = str_replace("{".$match."}", RegexBuilderService::Group($match)->raw(".*?"), $part);
+                    $part = str_replace("{".$match."}", RegexBuilderService::Group($match)->raw(".\d+|\D+"), $part);
                 }
             }
 
