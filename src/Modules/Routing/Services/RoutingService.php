@@ -110,7 +110,7 @@ class RoutingService implements IRoutingService
             FROM `site_routes` AS routes
             INNER JOIN site_route_parameters AS parameters ON parameters.route_id = routes.id
             WHERE (domain = ''  OR NULLIF(domain, '') IS NULL)
-			            AND published = 1
+			    AND published = 1
         ");
 
         foreach($dataset as $row){
