@@ -61,7 +61,7 @@ class TemplatingService implements ITemplatingService
      * @param string $content The content the variable must be replaced with
      */
     private function ReplaceVariable($variable, $replaceContent, $content){
-        return str_replace($variable, $replaceContent, $content);
+        return str_replace($variable, (string)$replaceContent, $content);
     }
 
     /**

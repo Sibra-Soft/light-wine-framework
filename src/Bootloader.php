@@ -27,10 +27,10 @@ class Bootloader {
     private function BeforeRequest(){
         // Add framework routes
         Route::Get("provider.scheduler", "/scheduler.dll", "@SchedulerServiceProvider", "controller");
-        Route::Get("provider.component", "/component.dll", "@ComponentServiceProvider", "controller");
         Route::Get("provider.images", "/images/{filename}", "@ImageServiceProvider", "controller");
         Route::Get("provider.resources", "/res/{type}/{filename}", "@ResourceServiceProvider", "controller");
 
+        Route::Post("provider.component", "/component.dll", "@ComponentServiceProvider", "controller");
         Route::Post("provider.modals", "/modal.dll", "@ModalServiceProvider", "controller");
         Route::Post("provider.partial", "/partial.dll", "@PartialServiceProvider", "controller");
         Route::Post("provider.module", "/module.dll", "@ModuleServiceProvider", "controller");

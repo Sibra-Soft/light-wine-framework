@@ -131,7 +131,7 @@ class RoutingService implements IRoutingService
         $requestMethod = strtoupper($_SERVER['REQUEST_METHOD']);
 
         // Check if the routes are cached
-        if(count($cachedRoutes) > 0){
+        if(is_array($cachedRoutes) and count($cachedRoutes) > 0){
             Route::$Routes = $cachedRoutes;
 
             TraceHelpers::Write("Loaded routing from the cache");
