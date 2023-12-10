@@ -3,24 +3,13 @@ namespace LightWine\Modules\Scheduler\Services;
 
 use LightWine\Modules\Communication\Services\MessageQueueService;
 use LightWine\Modules\Scheduler\Interfaces\IWorkerService;
-use LightWine\Modules\SiteModule\Services\SiteModuleService;
 
 class WorkerService implements IWorkerService
 {
     private MessageQueueService $messageQueueService;
-    private SiteModuleService $siteModuleService;
 
     public function __construct(){
         $this->messageQueueService = new MessageQueueService();
-        $this->siteModuleService = new SiteModuleService();
-    }
-
-    /**
-     * Executes a site extension template from the cms
-     * @param string $moduleNmae The name of the template you want to execute
-     */
-    private function ExecuteSiteExtension(string $moduleNmae){
-        $this->siteModuleService->RunModule($moduleNmae);
     }
 
     /**
@@ -55,7 +44,6 @@ class WorkerService implements IWorkerService
         foreach ($xml->task->children() as $node) {
             switch(strtolower($node->getName())){
                 case "general-sendmail": $this->SendMailGenerated(); break;
-                case "run-module": $this->siteModuleService->RunModule($node->body); break;
             }
         }
     }
