@@ -52,7 +52,7 @@ class PageService implements IPageService
         $masterpage = $this->templateService->GetTemplateByName("masterpage");
 
         // Get template from route
-        $template = $this->templateService->GetTemplateById($route->TemplateId);
+        $template = $this->templatingService->RenderTemplateAndDoAllReplacements($route->TemplateId);
 
         // Check if a user must be loggedin
         if($template->Policies->USERS_MUST_LOGIN and !$this->samService->CheckIfUserIsLoggedin())  HttpResponse::RedirectPermanent("/", []);
