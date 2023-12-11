@@ -3,6 +3,7 @@ namespace LightWine\Modules\Templating\Services;
 
 use LightWine\Core\Helpers\DeviceHelpers;
 use LightWine\Core\Helpers\StringHelpers;
+
 use LightWine\Modules\Templating\Services\BindingsService;
 use LightWine\Modules\Templating\Models\BindingReturnModel;
 use LightWine\Modules\Templates\Services\TemplatesService;
@@ -11,10 +12,10 @@ use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Language\Services\LanguageService;
 use LightWine\Modules\Templating\Interfaces\ITemplatingService;
 
+use LightWine\Components\Webform\Webform;
 use LightWine\Components\DeviceVerification\DeviceVerification;
 use LightWine\Components\Dataview\Dataview;
 use LightWine\Components\Account\Account;
-use LightWine\Components\ShoppingBasket\ShoppingBasket;
 
 use \DateTime;
 
@@ -193,7 +194,20 @@ class TemplatingService implements ITemplatingService
 
             $this->databaseConnection->ClearParameters();
             $this->databaseConnection->AddParameter("controlName", $controlValue);
-            $this->databaseConnection->GetDataset("SELECT * FROM `site_dynamic_content` WHERE `name` = ?controlName LIMIT 1;");
+            $this->databaseConnection->GetDataset("
+                SELECT
+                    component.id,
+	                version.content AS settings,
+	                JSON_UNQUOTE(JSON_EXTRACT(version.content, '$.Mode')) AS `mode`,
+	                JSON_UNQUOTE(JSON_EXTRACT(version.content, '$.Type')) AS `type`
+                FROM `site_templates` AS component
+
+                INNER JOIN site_template_versioning AS version ON version.version = component.template_version_dev AND version.template_id = component.id
+
+                WHERE component.`name` = ?controlName
+	                AND component.type = 'component'
+                LIMIT 1;
+            ");
 
             if($this->databaseConnection->rowCount > 0){
                 $controlId = $this->databaseConnection->DatasetFirstRow("id");
@@ -203,7 +217,7 @@ class TemplatingService implements ITemplatingService
                     case "device-verification": $myControl = new DeviceVerification($controlId); $controlContent = $myControl->Init(); break;
                     case "dataview": $myControl = new Dataview($controlId); $controlContent = $myControl->Init(); break;
                     case "account": $myControl = new Account($controlId); $controlContent = $myControl->Init(); break;
-                    case "shopping-basket": $myControl = new ShoppingBasket($controlId); $controlContent = $myControl->Init(); break;
+                    case "webform": $myControl = new Webform($controlId); $controlContent = $myControl->Init(); break;
                 }
             }
 
