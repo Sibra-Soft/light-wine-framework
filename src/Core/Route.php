@@ -19,7 +19,7 @@ class Route
      * @param string $url The url to convert to a matching pattern
      * @return string The matching pattern
      */
-    private function GenerateMatchingPattern(string $url): string {
+    private static function GenerateMatchingPattern(string $url): string {
         $parts = explode("/", $url);
         $pattern = RegexBuilderService::Expression()->startOfString("");
         $counter = 0;
@@ -27,7 +27,7 @@ class Route
         foreach($parts as $part){
             if(preg_match("/(?<=\{).+?(?=\})/", $part, $matches)){
                 foreach($matches as $match){
-                    $part = str_replace("{".$match."}", RegexBuilderService::Group($match)->raw(".[a-z-0-9_.]+"), $part);
+                    $part = str_replace("{".$match."}", RegexBuilderService::Group($match)->raw(".[a-z-A-Z-0-9_.]+"), $part);
                 }
             }
 
