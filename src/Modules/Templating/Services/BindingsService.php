@@ -2,6 +2,7 @@
 namespace LightWine\Modules\Templating\Services;
 
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Modules\Templating\Models\BindingReturnModel;
@@ -11,14 +12,19 @@ class BindingsService implements IBindingService
 {
     private MysqlConnectionService $databaseConnection;
     private TemplatingService $templatingService;
+    private ConfigurationManagerService $settings;
 
     public function __construct(TemplatingService $templatingService){
         $this->databaseConnection = new MysqlConnectionService();
         $this->templatingService = $templatingService;
+        $this->settings = new ConfigurationManagerService();
     }
 
     public function GetBindingBasedOnTemplateId(int $templateId): BindingReturnModel {
         $returnModel = new BindingReturnModel;
+
+        // Add the current environment as variable (options: `dev`, `test`, `live`)
+        $currentEnvironment = $this->settings->GetAppSetting("Environment");
 
         $this->databaseConnection->ClearParameters();
         $this->databaseConnection->AddParameter("templateId", $templateId);
@@ -30,7 +36,7 @@ class BindingsService implements IBindingService
 	            JSON_EXTRACT(version.content, '$.result_can_be_empty') AS result_can_be_empty,
 	            JSON_EXTRACT(version.content, '$.result_as_json') AS result_as_json
             FROM site_templates AS bindings
-            INNER JOIN site_template_versioning AS version ON version.template_id = bindings.id AND version.version = bindings.template_version_dev
+            INNER JOIN site_template_versioning AS version ON version.template_id = bindings.id AND version.version = bindings.template_version_$currentEnvironment
             WHERE bindings.parent_id = ?templateId
 	            AND bindings.type = 'binding'
 	    ");
