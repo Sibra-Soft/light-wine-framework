@@ -16,10 +16,7 @@ class UploadFileService implements IUploadFileService
         $this->databaseConnection = $connection;
     }
 
-    /**
-     * Upload a file based on the specified url
-     * @param string $url The url of the file you want to download
-     */
+    /** {@inheritdoc} */
     public function UploadFileBasedOnUrl(string $url){
         $fileModel = new FileUploadModel();
 
@@ -27,16 +24,14 @@ class UploadFileService implements IUploadFileService
 
         $fileModel->Filename = Helpers::NewGuid().".jpg";
         $fileModel->File = $targetDirectory.$fileModel->Filename;
-        
+
         // Download the file from the specified url
         Helpers::DownloadExternalFile($url, $fileModel->File);
 
         $this->UploadFile($fileModel);
     }
 
-    /**
-     * Upload a file that is specified in a webform
-     */
+    /** {@inheritdoc} */
     public function UploadFileFromWebform(){
         $fileModel = new FileUploadModel();
 
@@ -53,7 +48,7 @@ class UploadFileService implements IUploadFileService
      */
     private function UploadFile(FileUploadModel $fileModel): FileUploadModel {
         $image = file_get_contents($fileModel->File);
-        
+
         // Add the details to the upload model
         $fileModel->ItemId = (int)RequestVariables::Get("item_id", 0);
         $fileModel->FileSize = filesize($fileModel->File);

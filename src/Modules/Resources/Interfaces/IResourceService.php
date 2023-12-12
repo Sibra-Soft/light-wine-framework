@@ -1,14 +1,17 @@
 <?php
 namespace LightWine\Modules\Resources\Interfaces;
 
+use LightWine\Modules\Resources\Models\ResourcePackagesReturnModel;
 use LightWine\Modules\Templates\Models\TemplateModel;
 
 interface IResourceService
 {
     /**
-     * This function downloads all the external content from the specified CDN servers
+     * Gets the specified package form the CMS based on the specified type
+     * @param string $type The type of packages you want to get (CSS, JS)
+     * @return ResourcePackagesReturnModel Model containg the scripts for styling and javascript
      */
-    public function DownloadFromDeploymentServer();
+    public function GetPackages(): ResourcePackagesReturnModel;
 
     /**
      * This function gets the resources based on the specified filename

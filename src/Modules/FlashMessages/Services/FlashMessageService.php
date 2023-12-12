@@ -1,8 +1,8 @@
 <?php
-namespace LightWine\Modules\FlasMessages\Services;
+namespace LightWine\Modules\FlashMessages\Services;
 
 use LightWine\Core\Helpers\StringHelpers;
-use LightWine\Modules\FlasMessages\Interfaces\IFlashMessageService;
+use LightWine\Modules\FlashMessages\Interfaces\IFlashMessageService;
 
 class FlashMessageService implements IFlashMessageService
 {
@@ -11,31 +11,22 @@ class FlashMessageService implements IFlashMessageService
      */
     private function RenderFlashMessage(string $entry, string $message): string {
         $type = StringHelpers::SplitString($entry, "_", 3);
-        return sprintf('<div class="alert alert-%1">%s</div>', $message, $type);
+
+        return '<div class="alert alert-'.$type.'">'.$message.'</div>';
     }
 
-    /**
-     * Generates a new flashmessage ready to be shown
-     * @param string $name The name of the message
-     * @param string $message The message you want to display
-     * @param string $type The type of the message (info, warning, error, etc.)
-     */
+    /** {@inheritdoc} */
     public function NewFlashMessage(string $name, string $message, string $type = "info"){
         $_SESSION["flash_message_".$name."_".$type] = $message;
     }
 
-    /**
-     * Gets a specified message
-     * @param string $name The name of the message to show
-     */
+    /** {@inheritdoc} */
     public function GetFlashMessage(string $name){
         foreach($_SESSION as $key => $value){
             if(StringHelpers::StartsWith($key, "flash_message_".$name)){
-                $message = $this->RenderFlashMessage($name, $value);
+                $message = $this->RenderFlashMessage($key, $value);
             }
         }
-
-        unset($_SESSION["flash_message_"]);
 
         return $message;
     }

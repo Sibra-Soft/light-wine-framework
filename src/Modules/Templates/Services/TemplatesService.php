@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Modules\Templates\Services;
 
+use LightWine\Modules\Cache\Services\CacheService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Database\Enums\DataTypesEnum;
 use LightWine\Modules\Templates\Models\TemplateModel;
@@ -11,10 +12,14 @@ class TemplatesService implements ITemplatesService
 {
     private MysqlConnectionService $databaseConnection;
     private ConfigurationManagerService $settings;
+    public TemplateModel $returnModel;
+    public CacheService $cacheService;
 
     public function __construct(){
         $this->databaseConnection = new MysqlConnectionService();
         $this->settings = new ConfigurationManagerService();
+        $this->cacheService = new CacheService();
+        $this->returnModel = new TemplateModel;
     }
 
     /**
@@ -53,8 +58,6 @@ class TemplatesService implements ITemplatesService
             $this->returnModel->Settings->StylingResources = $dbConnection->DatasetFirstRow("stylesheets", DataTypesEnum::String);
             $this->returnModel->Settings->ScriptResources = $dbConnection->DatasetFirstRow("scripts", DataTypesEnum::String);
 
-            // Todo: Generate cache of template
-
             $policies = explode(",", $dbConnection->DatasetFirstRow("policies", DataTypesEnum::String));
             $this->GetTemplatePolicies($policies);
         }else{
@@ -87,6 +90,13 @@ class TemplatesService implements ITemplatesService
         }
     }
 
+    /**
+     * Gets a template based on the specified name and type
+     * @param string $templateName The name of the template you want to request
+     * @param string $templateType The type of the template you want to request
+     * @param string $folderName The foldername where the template is located
+     * @return TemplateModel Model containing all the details of the requested template
+     */
     public function GetTemplateByName(string $templateName, string $templateType = "html", string $folderName = "*"): TemplateModel {
         $this->returnModel = new TemplateModel();
 
@@ -102,7 +112,7 @@ class TemplatesService implements ITemplatesService
         FROM site_templates AS template
         LEFT JOIN site_templates AS folder ON folder.id = template.parent_id
         WHERE template.`name` = ?templateName
-	        AND template.type = ?templateType
+	        AND (template.type = ?templateType OR template.type = 'modal')
             AND IF(?folder = '*', 1=1, LOWER(folder.`name`) = ?folder)
         LIMIT 1;
         ");
@@ -118,6 +128,11 @@ class TemplatesService implements ITemplatesService
         return $this->returnModel;
     }
 
+    /**
+     * Gets a template based on a specified id
+     * @param int $templateId The id of the template you want to request
+     * @return TemplateModel Model containing all the details of the requested template
+     */
     public function GetTemplateById(int $templateId): TemplateModel {
         $this->returnModel = new TemplateModel();
         $this->returnModel->UnqiueId = sha1($this->returnModel->Id);

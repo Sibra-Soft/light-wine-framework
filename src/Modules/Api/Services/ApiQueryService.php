@@ -34,7 +34,7 @@ class ApiQueryService {
 
         // Add the request parameters to the query replacement store
         foreach($this->RequestModel->Parameters as $parameter){
-            $this->templatingService->AddReplaceVariable($parameter["Name"], $parameter["Value"]);
+            $this->templatingService->AddReplaceVariable($parameter["name"], $parameter["value"]);
         }
         $this->templatingService->AddReplaceVariable("user_id", $this->RequestModel->UserId);
 
@@ -84,16 +84,16 @@ class ApiQueryService {
      */
     public function HandleUpdateRequest(){
         foreach($this->RequestModel->Parameters as $parameter){
-            $this->queryBuilderService->Update($this->RequestModel->DatasourceName, $parameter["Name"], $parameter["Value"]);
+            $this->queryBuilderService->Update($this->RequestModel->DatasourceName, $parameter["name"], $parameter["value"]);
         }
 
         $this->queryBuilderService->Where(QueryExtenderEnum::Nothing, "user_id", QueryOperatorsEnum::EqualTo, $this->RequestModel->UserId);
         foreach($this->RequestModel->Parameters as $parameter){
-            if($parameter["IsPrimaryKey"]){
-                $this->queryBuilderService->Where(QueryExtenderEnum::AndExtender, $parameter["Name"], QueryOperatorsEnum::EqualTo, $parameter["Value"]);
+            if($parameter["isKey"]){
+                $this->queryBuilderService->Where(QueryExtenderEnum::AndExtender, $parameter["name"], QueryOperatorsEnum::EqualTo, $parameter["value"]);
             }
         }
-
+        
         $this->databaseConnection->executeQuery($this->queryBuilderService->Render());
 
         HttpResponse::SetReturnJson([
@@ -114,7 +114,7 @@ class ApiQueryService {
 
         $this->queryBuilderService->Insert($this->RequestModel->DatasourceName, "user_id", $this->RequestModel->UserId);
         foreach($this->RequestModel->Parameters as $parameter){
-            $this->queryBuilderService->Insert($this->RequestModel->DatasourceName, $parameter["Name"], $parameter["Value"]);
+            $this->queryBuilderService->Insert($this->RequestModel->DatasourceName, $parameter["name"], $parameter["value"]);
         }
 
         $this->databaseConnection->ExecuteQuery($this->queryBuilderService->Render());
@@ -138,8 +138,8 @@ class ApiQueryService {
         $this->queryBuilderService->Where(QueryExtenderEnum::Nothing, "user_id", QueryOperatorsEnum::EqualTo, $this->RequestModel->UserId);
 
         foreach($this->RequestModel->Parameters as $parameter){
-            if($parameter["IsPrimaryKey"]){
-                $this->queryBuilderService->Where(QueryExtenderEnum::AndExtender, $parameter["Name"], QueryOperatorsEnum::EqualTo, $parameter["Value"]);
+            if($parameter["isKey"]){
+                $this->queryBuilderService->Where(QueryExtenderEnum::AndExtender, $parameter["name"], QueryOperatorsEnum::EqualTo, $parameter["value"]);
             }
         }
 

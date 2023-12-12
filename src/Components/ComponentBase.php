@@ -1,6 +1,7 @@
 <?php
 namespace LightWine\Components;
 
+use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Interfaces\IComponentBase;
@@ -9,9 +10,11 @@ use LightWine\Core\Helpers\ConvertHelpers;
 class ComponentBase implements IComponentBase
 {
     private MysqlConnectionService $databaseConnection;
+    private ConfigurationManagerService $settings;
 
     public function __construct(){
         $this->databaseConnection = new MysqlConnectionService();
+        $this->settings = new ConfigurationManagerService();
     }
 
     /**
@@ -23,9 +26,20 @@ class ComponentBase implements IComponentBase
     public function GetSettings($controlInstance, int $componentId): object {
         $array = [];
 
+        // Add the current environment as variable (options: `dev`, `test`, `live`)
+        $currentEnvironment = $this->settings->GetAppSetting("Environment");
+
         $this->databaseConnection->ClearParameters();
         $this->databaseConnection->AddParameter("controlId", $componentId);
-        $this->databaseConnection->GetDataset("SELECT `settings` FROM `site_dynamic_content` WHERE `id` = ?controlId LIMIT 1;");
+        $this->databaseConnection->GetDataset("
+            SELECT
+	            version.content AS settings
+            FROM `site_templates` AS component
+            INNER JOIN site_template_versioning AS version ON version.version = component.template_version_$currentEnvironment AND version.template_id = component.id
+            WHERE component.`id` = ?controlId
+	            AND component.type = 'component'
+            LIMIT 1;
+        ");
 
         if($this->databaseConnection->rowCount > 0){
             $array = json_decode(Helpers::RepairJson($this->databaseConnection->DatasetFirstRow("settings")), true);

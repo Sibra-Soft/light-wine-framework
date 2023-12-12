@@ -1,18 +1,18 @@
 <?php
 namespace LightWine\Core\Services;
 
-use LightWine\Core\Models\RequestModel;
-use LightWine\Modules\Api\Services\ApiService;
 use LightWine\Core\Interfaces\IServerService;
-use LightWine\Modules\Logger\Services\LoggerService;
 use LightWine\Core\HttpResponse;
 use LightWine\Core\HttpRequest;
 use LightWine\Core\Enums\RouteTypeEnum;
+use LightWine\Modules\Logger\Services\LoggerService;
+use LightWine\Modules\Api\Services\ApiService;
+use LightWine\Modules\Routing\Models\RouteModel;
+use LightWine\Modules\Routing\Models\ViewRouteModel;
 use LightWine\Modules\Routing\Services\RoutingService;
 
 class ServerService implements IServerService
 {
-    private RequestModel $request;
     private PageService $pageService;
     private ApiService $apiService;
     private LoggerService $logger;
@@ -30,7 +30,9 @@ class ServerService implements IServerService
      * @param string $module The name of the module to run
      * @return string The return content of the function
      */
-    private function RunWebMethod(string $module): string {
+    private function ExecuteController(RouteModel $route): string {
+        $module = str_replace("@", "", $route->Action);
+
         if(class_exists('LightWine\\Providers\\'.$module.'\\'.$module)){
             $class = 'LightWine\\Providers\\'.$module.'\\'.$module;
             $pageObject = new $class;
@@ -57,11 +59,13 @@ class ServerService implements IServerService
         if($route->NotFound) HttpResponse::ShowError(404, "Not found", "The specified content could not be found");
 
         // Check the type of the current route
-        switch($route->Type){
-            case RouteTypeEnum::VIEW: $content = $this->pageService->Render($route)->Content; break;
-            case RouteTypeEnum::API_HANDLER: $content = $this->apiService->Start(); break;
-            case RouteTypeEnum::WEBMETHOD: $content = $this->RunWebMethod($route->Datasource); break;
-            case RouteTypeEnum::REDIRECT: HttpResponse::Redirect($route->Url, [], 302); break;
+        switch($route->Middleware){
+            case RouteTypeEnum::VIEW: $content = $this->pageService->Render(new ViewRouteModel($route))->Content; break;
+            case RouteTypeEnum::API: $content = $this->apiService->Execute($route); break;
+            case RouteTypeEnum::CONTROLLER: $content = $this->ExecuteController($route); break;
+            case RouteTypeEnum::REDIRECT: HttpResponse::Redirect($route->Url, []); break;
+
+            default: Throw new \Exception('Specified middleware not found: '.$route->Middleware, 1050);
         }
 
         $this->logger->LogSiteVisitor();

@@ -2,9 +2,9 @@
 namespace LightWine\Core\Interfaces;
 
 use \LightWine\Core\Models\PageModel;
-use \LightWine\Modules\Routing\Models\RouteModel;
+use LightWine\Modules\Routing\Models\ViewRouteModel;
 
 interface IPageService
 {
-    public function Render(RouteModel $route): PageModel;
+    public function Render(ViewRouteModel $route): PageModel;
 }

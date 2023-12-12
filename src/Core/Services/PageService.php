@@ -2,13 +2,13 @@
 namespace LightWine\Core\Services;
 
 use LightWine\Core\Models\PageModel;
-use LightWine\Modules\Routing\Models\RouteModel;
+use LightWine\Core\Interfaces\IPageService;
+use LightWine\Core\HttpResponse;
+use LightWine\Modules\Routing\Models\ViewRouteModel;
 use LightWine\Modules\Templates\Services\TemplatesService;
 use LightWine\Modules\Templating\Services\TemplatingService;
 use LightWine\Modules\Resources\Services\ResourceService;
 use LightWine\Modules\Sam\Services\SamService;
-use LightWine\Core\Interfaces\IPageService;
-use LightWine\Core\HttpResponse;
 
 class PageService implements IPageService
 {
@@ -43,30 +43,35 @@ class PageService implements IPageService
      * Render the requested page and fill the pagemodel
      * @return PageModel Model containing all the details of the requested page
      */
-    public function Render(RouteModel $route): PageModel {
+    public function Render(ViewRouteModel $route): PageModel {
         $pageModel = new PageModel;
 
         $start = microtime(true); // Start recording the render time
+
+        // Get masterpage template
         $masterpage = $this->templateService->GetTemplateByName("masterpage");
-        $template = $this->templateService->GetTemplateById($route->Datasource);
+
+        // Get template from route
+        $template = $this->templatingService->RenderTemplateAndDoAllReplacements($route->TemplateId);
 
         // Check if a user must be loggedin
-        if($template->Policies->USERS_MUST_LOGIN and !$this->samService->CheckIfUserIsLoggedin())  HttpResponse::Redirect("/", [], 301);
+        if($template->Policies->USERS_MUST_LOGIN and !$this->samService->CheckIfUserIsLoggedin())  HttpResponse::RedirectPermanent("/", []);
+        if($template->Policies->ENABLE_BASIC_AUTHENTICATION) $this->samService->BasicAuthentication();
 
-        // Get the template of the page
-        $pageTemplate = $this->templatingService->RenderTemplateAndDoAllReplacements($template);
+        $this->templatingService->AddReplaceVariable("pageContent", $template->Content);
+        $this->templatingService->AddReplaceVariable("pageJavascript", $this->GeneratePageJsClass());
+        $this->templatingService->AddReplaceVariable("pageTitle", $route->MetaTitle);
+        $this->templatingService->AddReplaceVariable("pageDescription", $route->MetaDescription);
+        $this->templatingService->AddReplaceVariable("pageStylesheets", $this->resourceService->GenerateResourceURL("styling", $template));
+        $this->templatingService->AddReplaceVariable("pageScripts", $this->resourceService->GenerateResourceURL("scripts", $template));
+        $this->templatingService->AddReplaceVariable("packagesStylesheets",  $this->resourceService->GetPackages()->CssPackages);
+        $this->templatingService->AddReplaceVariable("packagesScripts", $this->resourceService->GetPackages()->JavascriptPackages);
 
-        // Add the static masterpage variables
-        $result = $masterpage->Content;
-        $result = str_replace('{{$pageJavascript}}', $this->GeneratePageJsClass(), $result);
-        $result = str_replace('{{$pageTitle}}', $route->MetaTitle, $result);
-        $result = str_replace('{{$pageDescription}}', $route->MetaDescription, $result);
-        $result = str_replace('{{$pageContent}}', $pageTemplate->Content, $result);
-        $result = str_replace('{{$pageStylesheets}}', $this->resourceService->GenerateResourceURL("styling", $pageTemplate), $result);
-        $result = str_replace('{{$pageScripts}}', $this->resourceService->GenerateResourceURL("scripts", $pageTemplate), $result);
+        $masterpage = $this->templatingService->RenderTemplateAndDoAllReplacements($masterpage)->Content;
+        $masterpage = $this->templatingService->ReplaceAndRenderControls($masterpage);
 
-        $pageModel->Content = $result;
-        $pageModel->SizeInBytes = strlen($result);
+        $pageModel->Content = $masterpage;
+        $pageModel->SizeInBytes = strlen($masterpage);
         $pageModel->RenderTimeInMs = round(microtime(true) - $start * 1000); // Stop recording the render time
 
         return $pageModel;

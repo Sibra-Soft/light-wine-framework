@@ -1,5 +1,5 @@
 <?php
-namespace LightWine\Modules\FlasMessages\Enums;
+namespace LightWine\Modules\FlashMessages\Enums;
 
 abstract class RequestMethodesEnum
 {

@@ -3,6 +3,7 @@ namespace LightWine\Modules\Api\Services;
 
 use LightWine\Core\HttpResponse;
 use LightWine\Modules\Api\Models\ApiRequestModel;
+use LightWine\Modules\Routing\Models\RouteModel;
 use LightWine\Modules\Sam\Services\SamService;
 use LightWine\Core\Helpers\StringHelpers;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
@@ -24,19 +25,27 @@ class ApiService
     }
 
     /**
-     * This is the startup function of the class
+     * Executes a api request based on the specified route details
+     * @param RouteModel $route The details of the route
+     * @return string The content to return
      */
-    public function Start() {
+    public function Execute(RouteModel $route): string {
         if(!$this->samService->CheckIfUserIsLoggedin()){
             $this->RestServerReturnJson("You are unauthorized to access the requested resource.", "UNAUTHORIZED", 401);
         }
 
-        $this->GetHandlerAndParametersBasedOnRoute();
+        $this->RequestModel->Parameters = $route->Parameters;
+        $this->RequestModel->DatasourceName = StringHelpers::SplitString($route->Action, ";", 1);
+        $this->RequestModel->DatasourceType = StringHelpers::SplitString($route->Action, ";", 0);
+        $this->RequestModel->RouteParameters = $route->RoutingParams;
+
         $this->Authenticate();
         $this->FillParametersBasedOnRequestData();
         $this->CheckParameterDataTypes();
 
         $this->HandleCurrentRequest();
+
+        return "";
     }
 
     /**
@@ -67,79 +76,6 @@ class ApiService
         if(!($authorizationHeader == $authorizationBearer)){
             $this->RestServerReturnJson("You are unauthorized to access the requested resource.", "UNAUTHORIZED", 401);
         }
-
-        if(!in_array($this->RequestModel->RequestMethod, $this->RequestModel->AllowedMethodes)){
-            $this->RestServerReturnJson("Current request methode is not allowed for the requested resource", "FORBIDDEN", 403);
-        }
-    }
-
-    /**
-     * This function searches for the handler in the database based on the current request uri
-     * If the handler is found the attached parameters are added to the request object parameters array
-     */
-    private function GetHandlerAndParametersBasedOnRoute(){
-        $routeFound = false;
-        $routeId = 0;
-        $routeParameters = [];
-
-        // Check if the route exists
-        $this->databaseService->AddParameter("method", $this->RequestModel->RequestMethod);
-        $this->databaseService->AddParameter("request_url", $this->RequestModel->ApiRequestPath);
-        $this->databaseService->GetDataset("
-            SELECT
-                `id`,
-                CONCAT(`match_pattern`) AS `match_pattern`
-            FROM `site_rest_api`
-            WHERE allowed_methodes = ?method
-                AND ?request_url REGEXP match_pattern
-            ORDER BY `order`
-            LIMIT 1
-        ");
-
-        if($this->databaseService->rowCount > 0){
-            preg_match_all($this->databaseService->DatasetFirstRow("match_pattern"), $this->RequestModel->ApiRequestPath, $matches);
-
-            $routeParameters = (is_null($matches) ? [] : $matches);
-            $routeFound = true;
-            $routeId = $this->databaseService->DatasetFirstRow("id");
-        }
-
-        if($routeFound){
-            // Get the parameters based on the route
-            $this->databaseService->ClearParameters();
-            $this->databaseService->AddParameter("apiId", $routeId);
-            $dataset = $this->databaseService->GetDataset("
-                SELECT
-                    parameter,
-                    data_type,
-                    IFNULL(is_key, 0) AS is_key,
-                    IFNULL(is_required, 0) AS is_required ,
-                    IFNULL(default_value, '') AS default_value,
-                    api.datasource,
-                    api.allowed_methodes
-                FROM `site_rest_api_parameters` AS parameters
-                INNER JOIN site_rest_api AS api ON api.id = parameters.api_id
-                WHERE parameters.api_id = ?apiId
-            ");
-
-            $parameters = [];
-            foreach($dataset as $row){
-                $parameters[$row["parameter"]]["Name"] = $row["parameter"];
-                $parameters[$row["parameter"]]["DataType"] = $row["data_type"];
-                $parameters[$row["parameter"]]["IsPrimaryKey"] = (bool)$row["is_key"];
-                $parameters[$row["parameter"]]["IsRequired"] = (bool)$row["is_required"];
-                $parameters[$row["parameter"]]["DefaultValue"] = $row["default_value"];
-                $parameters[$row["parameter"]]["Value"] = "";
-            }
-
-            $this->RequestModel->AllowedMethodes = explode(",", strtolower($this->databaseService->DatasetFirstRow("allowed_methodes")));
-            $this->RequestModel->DatasourceName = StringHelpers::SplitString($this->databaseService->DatasetFirstRow("datasource"), ";", 1);
-            $this->RequestModel->DatasourceType = StringHelpers::SplitString($this->databaseService->DatasetFirstRow("datasource"), ";", 0);
-            $this->RequestModel->Parameters = $parameters;
-            $this->RequestModel->RouteParameters = $routeParameters;
-        }else{
-            $this->RestServerReturnJson("Not found", "API PATH NOT FOUND", 404);
-        }
     }
 
     /**
@@ -151,26 +87,30 @@ class ApiService
 
         // Add the values of the parameters from the request
         foreach($requestVariables as $key => $value){
-            $this->RequestModel->Parameters[$key]["Value"] = $value;
+            $index = array_search($key, array_column($this->RequestModel->Parameters, 'name'));
+
+            $this->RequestModel->Parameters[$index]["value"] = $value;
         }
 
         // Add the values of the parameters from the request uri
         foreach($this->RequestModel->RouteParameters as $key => $value){
-            if(array_key_exists($key, $this->RequestModel->Parameters)){
+            if(array_key_exists($key, $this->RequestModel->RouteParameters)){
                 $value = (is_array($value)) ? $value[0]: $value;
-                $this->RequestModel->Parameters[$key]["Value"] = $value;
+
+                $index = array_search($key, array_column($this->RequestModel->Parameters, 'name'));
+                $this->RequestModel->Parameters[$index]["value"] = $value;
             }
         }
 
         // Check the created parameters
         foreach($this->RequestModel->Parameters as $parameter){
-            if(!array_key_exists("Name", $parameter)){
+            if(!array_key_exists("name", $parameter)){
                 $this->RestServerReturnJson("Unnecessary parameter declaration", "UNNECESSARY_PARAMETER", 104);
             }
 
-            if(StringHelpers::IsNullOrWhiteSpace($parameter["Value"])){
-                if($parameter["IsRequired"]){
-                    $this->RestServerReturnJson("Required parameter not set: ".$parameter["Name"], "REQUIRED_PARAMETER", 103);
+            if(StringHelpers::IsNullOrWhiteSpace($parameter["value"])){
+                if($parameter["isRequired"]){
+                    $this->RestServerReturnJson("Required parameter not set: ".$parameter["name"], "REQUIRED_PARAMETER", 103);
                 }else{
                     unset($this->RequestModel->Parameters[$parameter["Name"]]);
                 }
@@ -183,22 +123,22 @@ class ApiService
      */
     private function CheckParameterDataTypes(){
         foreach($this->RequestModel->Parameters as $parameter){
-            switch($parameter["DataType"]){
+            switch($parameter["type"]){
                 case "string":
-                    if(!is_string($parameter["Value"])){
-                        $this->RestServerReturnJson("Parameter type mismatch for parameter: ".$parameter["Name"], "TYPE MISMATCH", 101);
+                    if(!is_string($parameter["value"])){
+                        $this->RestServerReturnJson("Parameter type mismatch for parameter: ".$parameter["name"], "TYPE MISMATCH", 101);
                     }
                     break;
 
                 case "integer":
-                    if(!is_numeric($parameter["Value"])){
-                        $this->RestServerReturnJson("Parameter type mismatch for parameter: ".$parameter["Name"], "TYPE MISMATCH", 101);
+                    if(!is_numeric($parameter["value"])){
+                        $this->RestServerReturnJson("Parameter type mismatch for parameter: ".$parameter["name"], "TYPE MISMATCH", 101);
                     }
                     break;
 
                 case "date":
-                    if(!StringHelpers::IsValidDate($parameter["Value"])){
-                        $this->RestServerReturnJson("Parameter type mismatch for parameter: ".$parameter["Name"], "TYPE MISMATCH", 101);
+                    if(!StringHelpers::IsValidDate($parameter["value"])){
+                        $this->RestServerReturnJson("Parameter type mismatch for parameter: ".$parameter["name"], "TYPE MISMATCH", 101);
                     }
                     break;
             }
