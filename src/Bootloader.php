@@ -88,6 +88,7 @@ class Bootloader {
         $view = str_replace("{{error_message}}", $message, $view);
         $view = str_replace("{{source}}", $specifiedSource, $view);
 
+        http_response_code(500);
         HttpResponse::SetContentType("text/html");
         HttpResponse::SetData($view);
     }
