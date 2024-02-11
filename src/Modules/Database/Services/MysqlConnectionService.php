@@ -203,7 +203,7 @@ class MysqlConnectionService implements IMysqlConnectionService {
         }
         catch(PDOException $e)
         {
-            if($e->getMessage() !== "SQLSTATE[HY000]: General error") throw new Exception($e->errorInfo[2]."#".$queryToExecute);
+            if($e->getMessage() !== "SQLSTATE[HY000]: General error") Throw new Exception($e->errorInfo[2]."#".$queryToExecute);
         }
 
         // Get the rowcount
