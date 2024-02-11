@@ -89,8 +89,8 @@ class MessageQueueService implements IMessageQueueService
                     $message->Body = $body;
                     $message->Subject = $subject;
                     $message->EmailAddress = $receiver;
-                    $message->FromName = $this->config->GetAppSetting("smtp")["from_name"];
-                    $message->FromAddress = $this->config->GetAppSetting("smtp")["from_address"];
+                    $message->FromName = $this->settings->GetAppSetting("smtp")["FromName"];
+                    $message->FromAddress = $this->settings->GetAppSetting("smtp")["FromAddress"];
 
                     $this->mailService->SendMail($message);
                     break;
