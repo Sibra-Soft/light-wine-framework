@@ -60,7 +60,7 @@ class ServerService implements IServerService
 
         // Check the type of the current route
         switch($route->Middleware){
-            case RouteTypeEnum::VIEW: $content = $this->pageService->Render(new ViewRouteModel($route))->Content; break;
+            case RouteTypeEnum::WEBVIEW: $content = $this->pageService->Render(new ViewRouteModel($route))->Content; break;
             case RouteTypeEnum::API: $content = $this->apiService->Execute($route); break;
             case RouteTypeEnum::CONTROLLER: $content = $this->ExecuteController($route); break;
             case RouteTypeEnum::REDIRECT: HttpResponse::Redirect($route->Url, []); break;
