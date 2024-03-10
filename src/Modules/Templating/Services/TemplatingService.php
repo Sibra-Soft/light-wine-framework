@@ -2,6 +2,7 @@
 namespace LightWine\Modules\Templating\Services;
 
 use LightWine\Core\Helpers\DeviceHelpers;
+use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\StringHelpers;
 
 use LightWine\Modules\Templating\Services\BindingsService;
@@ -125,17 +126,43 @@ class TemplatingService implements ITemplatingService
             $variableValue = str_replace("'", "", StringHelpers::StringBetween($variable, "(", ")"));
 
             switch($variableName){
-                // This will render and include a php script
-                case "include-stream":
-                    ob_start();
-                    include($_SERVER["DOCUMENT_ROOT"]."/app-code/".$variableValue);
-                    $ob_stream = ob_get_contents();
-                    ob_end_clean();
+                case "module":
+                    $returnContent = "";
 
-                    $content = $this->ReplaceVariable($variable, $ob_stream, $content);
+                    // Add querystring parameters if found
+                    parse_str(parse_url($variableValue, PHP_URL_QUERY), $queryString);
+                    foreach($queryString as $key => $value){$_GET[$key] = $value;}
+
+                    $template = $this->templateService->GetTemplateByName($variableValue, "module")->Content;
+
+                    preg_match_all('/@import\((\'.*?\')\)/', $template, $matches);
+                    foreach($matches[0] as $templateVariable){
+                        $valName = StringHelpers::StringBetween($variable, "@", "(");
+                        $valValue = str_replace("'", "", StringHelpers::StringBetween($variable, "(", ")"));
+
+                        if($variableValue === "ReturnContent"){
+                            $returnPageContent = true;
+                            $valValue = str_replace('/', '\\', $valValue);
+                            $template = str_replace($templateVariable, "", $template);
+                        }else{
+                            $valValue = str_replace('/', '\\', $valValue);
+                            $template = str_replace($templateVariable, "use ".$valValue.";", $template);
+                        }
+                    }
+
+                    $className = "Page".Helpers::RandomInteger(0, 100);
+                    $template = str_replace("class Page", "class ".$className, $template);
+
+                    eval($template);
+
+                    $pageObject = new $className;
+                    if(!method_exists($pageObject , "Init")){
+                        echo("The specified module does not contain a Page class with Init function");
+                    }
+
+                    $content = $this->ReplaceVariable($variable, "", $content);
                     break;
 
-                // This will include a specified template
                 case "include":
                     $templateModel = new TemplateModel;
 
@@ -293,11 +320,6 @@ class TemplatingService implements ITemplatingService
                 case "@urldecode":
                     $tempContent = $this->ReplaceVariable($variable, urldecode($commandValue), $tempContent);
                     break;
-
-                case "@cdate":
-                    $tempContent = $this->ReplaceVariable($variable, strftime($commandParameter, strtotime('1899-12-30 + '.$commandValue.' days')), $tempContent);
-                    break;
-
             }
         }
 
