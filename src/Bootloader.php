@@ -88,7 +88,7 @@ class Bootloader {
         $view = str_replace("{{source_file}}", $exception->getFile(), $view);
         $view = str_replace("{{error_message}}", $message, $view);
         $view = str_replace("{{source}}", $specifiedSource, $view);
-        $view = str_replace("{{framework_version}}", $composerJson->version);
+        $view = str_replace("{{framework_version}}", $composerJson->version, $view);
 
         http_response_code(500);
 
