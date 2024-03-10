@@ -219,19 +219,19 @@ class ImdbServiceProvider implements IImdbServiceProvider
         // Get details
         $returnModel->Title = $apiResponse["Title"];
         $returnModel->Id = $apiResponse["imdbID"];
-        $returnModel->Year = $apiResponse["Year"];
-        $returnModel->RuntimeMins = $apiResponse["Runtime"];
+        $returnModel->Year = (is_numeric($apiResponse["Year"]) ? $apiResponse["Year"] : 0);
+        $returnModel->RuntimeMins = (int)$apiResponse["Runtime"];
         $returnModel->GenreList = explode(",", $apiResponse["Genre"]);
         $returnModel->CountryList = explode(",", $apiResponse["Country"]);
         $returnModel->DirectorList = explode(",", $apiResponse["Director"]);
         $returnModel->ActorList = explode(",", $apiResponse["Actors"]);
         $returnModel->LanguageList = explode(",", $apiResponse["Language"]);
         $returnModel->CoverImage = $apiResponse["Poster"];
-        $returnModel->ImdbRating = floatval($apiResponse["Metascore"]["imdbRating"]);
+        $returnModel->ImdbRating = (is_float($apiResponse["Metascore"]["imdbRating"]) ? $apiResponse["Metascore"]["imdbRating"] : 0);
         $returnModel->ObjectType = $apiResponse["Type"];
         $returnModel->ContentRating = $apiResponse["Rated"];
         $returnModel->Plot = $apiResponse["Plot"];
-        $returnModel->NumberOfSeasons = $apiResponse["totalSeasons"];
+        $returnModel->NumberOfSeasons = (is_numeric($apiResponse["totalSeasons"]) ? $apiResponse["totalSeasons"] : 0);
 
         // Get first in list of items
         $returnModel->FirstActor = Helpers::FirstOrDefault($returnModel->ActorList);

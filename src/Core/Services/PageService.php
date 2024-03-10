@@ -52,11 +52,14 @@ class PageService implements IPageService
         $masterpage = $this->templateService->GetTemplateByName("masterpage");
 
         // Get template from route
-        $template = $this->templatingService->RenderTemplateAndDoAllReplacements($route->TemplateId);
+        $template = $this->templateService->GetTemplateById($route->TemplateId);
 
         // Check if a user must be loggedin
         if($template->Policies->USERS_MUST_LOGIN and !$this->samService->CheckIfUserIsLoggedin())  HttpResponse::RedirectPermanent("/", []);
         if($template->Policies->ENABLE_BASIC_AUTHENTICATION) $this->samService->BasicAuthentication();
+
+        // Do the replacements of the template
+        $template = $this->templatingService->RenderTemplateAndDoAllReplacements($template);
 
         $this->templatingService->AddReplaceVariable("pageContent", $template->Content);
         $this->templatingService->AddReplaceVariable("pageJavascript", $this->GeneratePageJsClass());
