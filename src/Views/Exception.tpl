@@ -57,7 +57,7 @@
 
             <hr width=100% size=1 color=silver>
 
-            <b>Version Information:</b>&nbsp;Sibra-Soft LightWine Framework Version 1.0.0.1
+            <b>Version Information:</b>&nbsp;Sibra-Soft LightWine Framework Version {{framework_version}}
 
             </font>
 
