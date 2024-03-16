@@ -2,20 +2,18 @@
 namespace LightWine\Modules\Database\Services;
 
 use LightWine\Core\Helpers\StringHelpers;
+use LightWine\Modules\Files\Services\UploadService;
 use LightWine\Modules\QueryBuilder\Services\QueryBuilderService;
 use LightWine\Modules\QueryBuilder\Enums\QueryExtenderEnum;
 use LightWine\Modules\QueryBuilder\Enums\QueryOperatorsEnum;
 use LightWine\Modules\Database\Interfaces\IDatabaseHelperService;
-use LightWine\Modules\Files\Services\UploadFileService;
 
 class DatabaseHelperService implements IDatabaseHelperService {
     private MysqlConnectionService $databaseConnection;
     private QueryBuilderService $queryBuilder;
-    private UploadFileService $uploadFileService;
 
     public function __construct(MysqlConnectionService $connection){
         $this->databaseConnection = $connection;
-        $this->uploadFileService = new UploadFileService($connection);
         $this->queryBuilder = new QueryBuilderService();
     }
 
@@ -116,16 +114,6 @@ class DatabaseHelperService implements IDatabaseHelperService {
         $this->databaseConnection->ExecuteQuery($query);
 
         return $this->databaseConnection->rowInsertId;
-    }
-
-    /** {@inheritdoc} */
-    public function UploadBlob(){
-        $this->uploadFileService->UploadFileFromWebform();
-    }
-
-    /** {@inheritdoc} */
-    public function UploadBlobBasedOnUrl(string $url){
-        $this->uploadFileService->UploadFileBasedOnUrl($url);
     }
 }
 ?>
