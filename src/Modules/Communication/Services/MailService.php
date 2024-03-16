@@ -21,10 +21,10 @@ Class MailService implements IMailService {
 
         $this->mailer->isSMTP();
         $this->mailer->SMTPAuth = true;
-        $this->mailer->Host = $this->settings->GetAppSetting("smtp")->Host;
-        $this->mailer->Port = $this->settings->GetAppSetting("smtp")->Port;
-        $this->mailer->Username = $this->settings->GetAppSetting("smtp")->Username;
-        $this->mailer->Password = $this->settings->GetAppSetting("smtp")->Password;
+        $this->mailer->Host = $this->settings->GetAppSetting("Smtp")["Host"];
+        $this->mailer->Port = $this->settings->GetAppSetting("Smtp")["Port"];
+        $this->mailer->Username = $this->settings->GetAppSetting("Smtp")["Username"];
+        $this->mailer->Password = $this->settings->GetAppSetting("Smtp")["Password"];
     }
 
     /**
@@ -39,8 +39,10 @@ Class MailService implements IMailService {
         $this->mailer->Subject = $mail->Subject;
         $this->mailer->Body = $mail->Body;
 
-        if($this->mailer->send() && $this->settings->GetAppSetting("LogAllMail") == "true"){
-            $this->LogSendMail($mail);
+        if($this->mailer->send()){
+            if($this->settings->GetAppSetting("LogAllMail") == "true"){
+                $this->LogSendMail($mail);
+            }
         }
     }
 

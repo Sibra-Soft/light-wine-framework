@@ -8,9 +8,11 @@ use LightWine\Core\Helpers\DeviceHelpers;
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Core\Helpers\RequestVariables;
 use LightWine\Core\HttpResponse;
+use LightWine\Modules\Communication\Models\MessageModel;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\Sam\Services\SamService;
-use LightWine\Modules\Templating\Services\TemplatingService;
+use LightWine\Modules\Templates\Services\TemplatesService;
+use LightWine\Modules\Templating\Services\StringTemplaterService;
 use LightWine\Components\DeviceVerification\Models\DeviceVerificationComponentModel;
 use LightWine\Modules\Communication\Services\MessageQueueService;
 
@@ -18,44 +20,61 @@ class DeviceVerification {
     private ComponentBase $control;
     private MysqlConnectionService $databaseConnection;
     private SamService $samService;
-    private TemplatingService $templatingService;
+    private StringTemplaterService $stringTemplaterService;
     private DeviceVerificationComponentModel $settings;
     private MessageQueueService $messageQueue;
+    private TemplatesService $templatesService;
 
     public function __construct(int $id){
         $this->control = new ComponentBase();
         $this->settings = $this->control->GetSettings(new DeviceVerificationComponentModel, $id);
         $this->databaseConnection = new MysqlConnectionService();
         $this->samService = new SamService();
-        $this->templatingService = new TemplatingService();
+        $this->stringTemplaterService = new StringTemplaterService();
         $this->messageQueue = new MessageQueueService();
+        $this->templatesService = new TemplatesService();
     }
 
     /**
      * Sends a device verification mail, and shows the correct template
      */
     private function SendDeviceVerification(){
-        if($this->CheckIfDeviceIsRegisteredAndVerified()){
-            HttpResponse::RedirectPermanent($this->settings->RedirectUrlIfVerified, []);
-        }else{
-            $this->templatingService->AddTemplatingVariablesToStore();
+        $template = "";
 
-            $template = $this->settings->VerifyTemplate;
+        if($this->CheckIfDeviceIsRegisteredAndVerified()){
+            if($this->settings->RedirectIfVerified){
+                HttpResponse::RedirectPermanent($this->settings->RedirectUrlIfVerified, []);
+            }
+
+            return "";
+        }else{
+            // Check if a mail template is specified
+            if($this->settings->MailTemplate > 0){
+                $template = $this->templatesService->GetTemplateById($this->settings->MailTemplate)->Content;
+            }else{
+                $template = $this->settings->VerifyTemplate;
+            }
+
             $deviceRegistration = $this->RegisterCurrentDevice();
 
             if($this->settings->UsePincodeToVerify){
-                $this->templatingService->AddReplaceVariable("pincode", $deviceRegistration->Pincode);
+                $messageModel = new MessageModel();
 
-                $template = $this->templatingService->ReplaceVariablesFromStore($template);
-                $template = $this->templatingService->RunCompilers($template);
-            }else{
-                $this->templatingService->AddReplaceVariable("guid", $deviceRegistration->DeviceGuid);
+                $this->stringTemplaterService->AssignVariable("pincode", $deviceRegistration->Pincode);
+                $template = $this->stringTemplaterService->DoReplacements($template);
 
-                $template = $this->templatingService->ReplaceVariablesFromStore($template);
-                $template = $this->templatingService->RunCompilers($template);
+                $messageModel->ReplaceHeaderAndFooter = true;
+                $messageModel->HeaderTemplateId = 96;
+                $messageModel->FooterTemplateId = 97;
+                $messageModel->DateScheduled = Helpers::Now();
+                $messageModel->Receiver = "alex@sibra-soft.nl";
+                $messageModel->Subject = "Apparaat verificatie";
+                $messageModel->Body = $template;
+
+                $this->messageQueue->AddToMessageQueue($messageModel);
             }
 
-            return $template;
+            HttpResponse::RedirectPermanent($this->settings->RedirectUrlIfNotVerified, []);
         }
     }
 
@@ -152,6 +171,10 @@ class DeviceVerification {
     }
 
     private function RenderControl(): string {
+        if(!isset($_SESSION["UserId"])){
+            HttpResponse::RedirectPermanent("/", []);
+        }
+
         switch($this->settings->Mode){
             case ComponentModes::Verify: return $this->SendDeviceVerification();
             case ComponentModes::Confirm: return $this->ConfirmDeviceVerification();

@@ -130,15 +130,12 @@ class TemplatingService implements ITemplatingService
                     $returnContent = "";
 
                     // Add querystring parameters if found
-                    parse_str(parse_url($variableValue, PHP_URL_QUERY), $queryString);
-                    foreach($queryString as $key => $value){$_GET[$key] = $value;}
-
                     $template = $this->templateService->GetTemplateByName($variableValue, "module")->Content;
 
                     preg_match_all('/@import\((\'.*?\')\)/', $template, $matches);
                     foreach($matches[0] as $templateVariable){
-                        $valName = StringHelpers::StringBetween($variable, "@", "(");
-                        $valValue = str_replace("'", "", StringHelpers::StringBetween($variable, "(", ")"));
+                        $valName = StringHelpers::StringBetween($templateVariable, "@", "(");
+                        $valValue = str_replace("'", "", StringHelpers::StringBetween($templateVariable, "(", ")"));
 
                         if($variableValue === "ReturnContent"){
                             $returnPageContent = true;
@@ -158,9 +155,11 @@ class TemplatingService implements ITemplatingService
                     $pageObject = new $className;
                     if(!method_exists($pageObject , "Init")){
                         echo("The specified module does not contain a Page class with Init function");
+                    }else{
+                        $returnContent = call_user_func(array($pageObject, 'Init'));
                     }
 
-                    $content = $this->ReplaceVariable($variable, "", $content);
+                    $content = $this->ReplaceVariable($variable, $returnContent, $content);
                     break;
 
                 case "include":

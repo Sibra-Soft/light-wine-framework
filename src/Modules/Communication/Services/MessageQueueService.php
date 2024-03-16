@@ -16,12 +16,16 @@ class MessageQueueService implements IMessageQueueService
     private SmsService $smsService;
     private MysqlConnectionService $databaseConnection;
     private ConfigurationManagerService $settings;
+    private StringTemplaterService $stringTemplaterService;
+    private TemplatesService $templatesService;
 
     public function __construct(){
         $this->mailService = new MailService();
         $this->smsService = new SmsService();
         $this->databaseConnection = new MysqlConnectionService();
         $this->settings = new ConfigurationManagerService();
+        $this->stringTemplaterService = new StringTemplaterService();
+        $this->templatesService = new TemplatesService();
     }
 
     /**
@@ -54,9 +58,21 @@ class MessageQueueService implements IMessageQueueService
     public function AddToMessageQueue(MessageModel $message){
         $this->databaseConnection->ClearParameters();
 
+        $messageBody = $message->Body;
+
+        if($message->ReplaceHeaderAndFooter){
+            $headerTemplate = $this->templatesService->GetTemplateById($message->HeaderTemplateId)->Content;
+            $footerTemplate = $this->templatesService->GetTemplateById($message->FooterTemplateId)->Content;
+
+            $this->stringTemplaterService->AssignVariable("mail-header", $headerTemplate);
+            $this->stringTemplaterService->AssignVariable("mail-footer", $footerTemplate);
+
+            $messageBody = $this->stringTemplaterService->DoReplacements($messageBody);
+        }
+
         $this->databaseConnection->AddParameter("receiver_email", $message->Receiver);
         $this->databaseConnection->AddParameter("subject", $message->Subject);
-        $this->databaseConnection->AddParameter("body", $message->Body);
+        $this->databaseConnection->AddParameter("body", $messageBody);
         $this->databaseConnection->AddParameter("date_scheduled", $message->DateScheduled->format("Y-m-d h:i:s"));
         $this->databaseConnection->AddParameter("type", $message->Type);
 
@@ -67,7 +83,7 @@ class MessageQueueService implements IMessageQueueService
      * Process the current queue
      */
     public function ProcessQueue(){
-        $dataset = $this->databaseConnection->GetDataset("SELECT * FROM `_communication` WHERE date_sent IS NULL");
+        $dataset = $this->databaseConnection->GetDataset("SELECT * FROM `_communication` WHERE date_sent IS NULL AND date_processed IS NULL");
 
         foreach($dataset as $row){
             $id = $row["id"];
@@ -89,8 +105,8 @@ class MessageQueueService implements IMessageQueueService
                     $message->Body = $body;
                     $message->Subject = $subject;
                     $message->EmailAddress = $receiver;
-                    $message->FromName = $this->settings->GetAppSetting("smtp")["FromName"];
-                    $message->FromAddress = $this->settings->GetAppSetting("smtp")["FromAddress"];
+                    $message->FromName = $this->settings->GetAppSetting("Smtp")["FromName"];
+                    $message->FromAddress = $this->settings->GetAppSetting("Smtp")["FromAddress"];
 
                     $this->mailService->SendMail($message);
                     break;

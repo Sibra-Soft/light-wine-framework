@@ -2,14 +2,17 @@
 namespace LightWine\Modules\Scheduler\Services;
 
 use LightWine\Modules\Communication\Services\MessageQueueService;
+use LightWine\Modules\ModuleRunner\Services\ModuleRunnerService;
 use LightWine\Modules\Scheduler\Interfaces\IWorkerService;
 
 class WorkerService implements IWorkerService
 {
     private MessageQueueService $messageQueueService;
+    private ModuleRunnerService $moduleRunner;
 
     public function __construct(){
         $this->messageQueueService = new MessageQueueService();
+        $this->moduleRunner = new ModuleRunnerService();
     }
 
     /**
@@ -35,6 +38,13 @@ class WorkerService implements IWorkerService
     }
 
     /**
+     * This runs a cms module based on the specified name
+     */
+    private function RunModule(string $moduleName){
+        $this->moduleRunner->RunCmsModule($moduleName);
+    }
+
+    /**
      * Runs the worker based on the template
      * @param string $workerTemplate The worker template
      */
@@ -44,6 +54,7 @@ class WorkerService implements IWorkerService
         foreach ($xml->task->children() as $node) {
             switch(strtolower($node->getName())){
                 case "general-sendmail": $this->SendMailGenerated(); break;
+                case "run-module": $this->RunModule($node); break;
             }
         }
     }
