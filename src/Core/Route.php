@@ -27,7 +27,7 @@ class Route
         foreach($parts as $part){
             if(preg_match("/(?<=\{).+?(?=\})/", $part, $matches)){
                 foreach($matches as $match){
-                    $part = str_replace("{".$match."}", RegexBuilderService::Group($match)->raw(".[a-z-A-Z-0-9_.]+"), $part);
+                    $part = str_replace("{".$match."}", RegexBuilderService::Group($match)->raw("[a-z-A-Z-0-9_.]+"), $part);
                 }
             }
 
@@ -178,16 +178,13 @@ class Route
      * @param string $targetLocation The redirect location
      * @param int $type The type of redirect you want to use (301, 302)
      */
-    public static function Redirect(string $url, string $targetLocation, int $type = 302, array $options = [], string $domain = "*"){
-        array_push(self::$Routes["GET"], [
+    public static function Redirect(string $url, string $targetLocation, int $type = 302){
+        array_push(self::$Routes, [
             "url" => $url,
-            "name" => "redirect",
-            "action" => $targetLocation,
-            "domain" => $domain,
-            "parameters" => [],
-            "options" => $options,
-            "middleware" => "redirect",
-            "regex_pattern" => self::GenerateMatchingPattern($url)
+            "source" => $targetLocation,
+            "options" => [
+                "redirect_type" => $type
+            ]
         ]);
     }
 }
