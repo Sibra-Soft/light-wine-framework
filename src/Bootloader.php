@@ -29,6 +29,7 @@ class Bootloader {
         Route::Get("provider.scheduler", "/scheduler.dll", "@SchedulerServiceProvider", "controller");
         Route::Get("provider.images", "/images/{filename}", "@ImageServiceProvider", "controller");
         Route::Get("provider.resources", "/res/{type}/{filename}", "@ResourceServiceProvider", "controller");
+        Route::Get("provider.module", "/module.dll", "@ModuleServiceProvider", "controller");
 
         Route::Post("provider.component", "/component.dll", "@ComponentServiceProvider", "controller");
         Route::Post("provider.modals", "/modal.dll", "@ModalServiceProvider", "controller");
@@ -37,6 +38,7 @@ class Bootloader {
         Route::Post("provider.templates", "/template.dll", "@TemplateServiceProvider", "controller");
         Route::Post("provider.imdb", "/imdb.dll", "@ImdbServiceProvider", "controller");
         Route::Post("provider.json", "/json.dll", "@JsonServiceProvider", "controller");
+        Route::Post("provider.file", "/upload.dll", "@FileServiceProvider", "controller");
 
         // Add framework route parameters
         Route::RegisterRouteParameter("get@provider.images", "filename", "string", false, true);
@@ -77,8 +79,8 @@ class Bootloader {
      */
     public function SetExceptionHandler($exception){
         $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
-        $composerJson = json_decode(Helpers::GetFileContent("~/composer.json"), false);
-
+		$composerJson = json_decode(Helpers::GetFileContent("~/composer.json"), false);
+		
         $message = StringHelpers::SplitString($exception->getMessage(), "#", 0);
         $specifiedSource = StringHelpers::SplitString($exception->getMessage(), "#", 1);
 
@@ -88,10 +90,9 @@ class Bootloader {
         $view = str_replace("{{source_file}}", $exception->getFile(), $view);
         $view = str_replace("{{error_message}}", $message, $view);
         $view = str_replace("{{source}}", $specifiedSource, $view);
-        $view = str_replace("{{framework_version}}", $composerJson->version, $view);
+		$view = str_replace("{{framework_version}}", $composerJson->version, $view);
 
         http_response_code(500);
-
         HttpResponse::SetContentType("text/html");
         HttpResponse::SetData($view);
     }

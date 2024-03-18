@@ -38,16 +38,5 @@ interface IDatabaseHelperService
      * @param int|null $id The id of the row that must be updated
      */
     public function UpdateOrInsertRecordBasedOnParameters(string $table, int $id = null, bool $ignoreDuplicates = false):int;
-
-    /**
-     * Upload a file based on a specified url
-     * @param string $url The url of the file to upload to the database
-     */
-    public function UploadBlobBasedOnUrl(string $url);
-
-    /**
-     * Upload a file to the server from the browser
-     */
-    public function UploadBlob();
 }
 ?>
