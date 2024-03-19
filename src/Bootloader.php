@@ -79,7 +79,7 @@ class Bootloader {
      */
     public function SetExceptionHandler($exception){
         $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
-		$composerJson = json_decode(Helpers::GetFileContent("~/composer.json"), false);
+		$composerJson = json_decode(Helpers::GetFileContent("#/composer.json"), false);
 		
         $message = StringHelpers::SplitString($exception->getMessage(), "#", 0);
         $specifiedSource = StringHelpers::SplitString($exception->getMessage(), "#", 1);
