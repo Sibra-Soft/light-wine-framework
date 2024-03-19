@@ -78,7 +78,7 @@ class Bootloader {
      * @param TypeError|Exception|Error $exception The thrown exception
      */
     public function SetExceptionHandler($exception){
-        if(ini_get("display_errors")){
+        if(error_reporting() == E_ALL){
             $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
             $composerJson = json_decode(Helpers::GetFileContent("#/composer.json"), false);
 
