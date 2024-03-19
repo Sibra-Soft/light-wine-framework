@@ -227,7 +227,7 @@ class ImdbServiceProvider implements IImdbServiceProvider
         $returnModel->ActorList = explode(",", $apiResponse["Actors"]);
         $returnModel->LanguageList = explode(",", $apiResponse["Language"]);
         $returnModel->CoverImage = $apiResponse["Poster"];
-        $returnModel->ImdbRating = (is_float($apiResponse["Metascore"]["imdbRating"]) ? $apiResponse["Metascore"]["imdbRating"] : 0);
+        //$returnModel->ImdbRating = $apiResponse["Metascore"]["imdbRating"];
         $returnModel->ObjectType = $apiResponse["Type"];
         $returnModel->ContentRating = $apiResponse["Rated"];
         $returnModel->Plot = $apiResponse["Plot"];
