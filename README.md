@@ -28,7 +28,6 @@ Below you find a example of a configuration file for a website/webapplication cr
   "Connections": {
     // Here you can add connectionstring of your databases
   },
-  "AutoUpdate": false, // Specifies if the framework must be automatically updated
   "CacheFolder": "~/cache/", // Specifies the location of the cache folder
   "Environment": "dev", // Specifies the current enviroment (dev, test or live)
   "Tracing": false, // Enables the tracing of the framework for easy debugging
@@ -36,6 +35,9 @@ Below you find a example of a configuration file for a website/webapplication cr
   "CreateDebugLog": false, // Creates all log entries including debug log entries
   "LogDatabase": false, // Enables logging to the database instead of a file
   "GzipEncode": true, // Enables gzip compression for all content provided by the framework
+  "MailHeaderTemplateId": 0, // Used to specify the default mail header template
+  "MailFooterTemplateId": 0, // Used to specify the default mail footer template
+  "LogAllMail": true, // If enabled, all send mail will be logged to a table
   "Smtp": {
     "Host": "smtp.example.com", // Hostname of your smtp server
     "Port": 587, // Port number of your smtp server
@@ -43,6 +45,12 @@ Below you find a example of a configuration file for a website/webapplication cr
     "Password": "", // Password of your smtp server
     "FromName": "Exmaple", // The name you want to use to send the mail
     "FromAddress": "example@example.com" // The emailaddress you want to use to send the mail
+  },
+  "imdb": {
+    "omdb_api_key": "" // Api key to connect to the omdbapi.com api
+  },
+  "scheduler": {
+    "token": "" // Enter the token that must be used to run the scheduler from cronjobs
   }
 }
 ```
