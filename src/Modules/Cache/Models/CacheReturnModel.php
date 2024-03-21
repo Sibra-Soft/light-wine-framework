@@ -3,14 +3,13 @@ namespace LightWine\Modules\Cache\Models;
 
 use \DateTime;
 
-class CacheServiceReturnModel
+class CacheReturnModel
 {
     public DateTime $DateCreated;
     public DateTime $DateCached;
 
     public string $UniqueId;
+    public string $CacheFile;
 
-    public bool $IsFromCache = false;
-
-    public $Data;
+    public bool $Cached;
 }

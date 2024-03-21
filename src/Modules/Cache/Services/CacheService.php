@@ -3,7 +3,7 @@ namespace LightWine\Modules\Cache\Services;
 
 use LightWine\Core\Helpers\Helpers;
 use LightWine\Modules\Cache\Interfaces\ICacheService;
-use LightWine\Modules\Cache\Models\CacheServiceReturnModel;
+use LightWine\Modules\Cache\Models\CacheReturnModel;
 use LightWine\Modules\ConfigurationManager\Services\ConfigurationManagerService;
 
 class CacheService implements ICacheService {
@@ -13,7 +13,7 @@ class CacheService implements ICacheService {
 
     public function __construct() {
         $this->config = new ConfigurationManagerService();
-        
+
         $this->CacheFolder = Helpers::MapPath($this->config->GetAppSetting("CacheFolder"));
 
         Helpers::CreateFolderIfNotExists($this->CacheFolder);
@@ -27,24 +27,22 @@ class CacheService implements ICacheService {
     }
 
     /**
-     * This function gets or generates a cache file from the specified content
-     * @param mixed $content The content that must be cached, can be: image, html, php, etc.
-     * @param string $filename The filename of the cache file (must be unique)
-     * @param int $period The period in hours the cache must be preserved
-     * @return CacheServiceReturnModel
+     * Caches a file using the filename as ID
+     * @param string $filename The filename to use when caching
+     * @param int $period The period the file must be cached in hours, default = 8 hours
+     * @param string $folder Additional folders you want to add to the cache path
+     * @return CacheReturnModel Model containg all the details of the cached file
      */
-    public function GetOrCacheFile($content, string $filename, int $period = 8): CacheServiceReturnModel {
-        $returnModel = new CacheServiceReturnModel;
+    public function CheckFileCache(string $filename, int $period = 8, string $folder = "/"): CacheReturnModel {
+        $returnModel = new CacheReturnModel;
 
         $cacheFileSha = sha1($filename);
-        $cacheFile = $this->CacheFolder."/".$cacheFileSha.".cache";
+        $cacheFile = $this->CacheFolder.$folder.$cacheFileSha.".cache";
 
-        if(file_exists($cacheFile)){
-            $returnModel->Data = $content;
-            $returnModel->DateCached = new \DateTime(date("Y-m-d H:i:s", filemtime($cacheFile)));
-            $returnModel->UniqueId = $cacheFileSha;
-            $returnModel->IsFromCache = true;
-        }
+        $returnModel->DateCached = new \DateTime(date("Y-m-d H:i:s", filemtime($cacheFile)));
+        $returnModel->UniqueId = $cacheFileSha;
+        $returnModel->CacheFile = $cacheFile;
+        $returnModel->Cached = file_exists($cacheFile);
 
         return $returnModel;
     }
