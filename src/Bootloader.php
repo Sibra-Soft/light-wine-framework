@@ -36,7 +36,6 @@ class Bootloader {
         Route::Post("provider.partial", "/partial.dll", "@PartialServiceProvider", "controller");
         Route::Post("provider.module", "/module.dll", "@ModuleServiceProvider", "controller");
         Route::Post("provider.templates", "/template.dll", "@TemplateServiceProvider", "controller");
-        Route::Post("provider.imdb", "/imdb.dll", "@ImdbServiceProvider", "controller");
         Route::Post("provider.json", "/json.dll", "@JsonServiceProvider", "controller");
         Route::Post("provider.file", "/upload.dll", "@FileServiceProvider", "controller");
 
@@ -78,7 +77,7 @@ class Bootloader {
      * @param TypeError|Exception|Error $exception The thrown exception
      */
     public function SetExceptionHandler($exception){
-        if(error_reporting() == E_ALL){
+        if(ini_get("display_errors")){
             $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
             $composerJson = json_decode(Helpers::GetFileContent("#/composer.json"), false);
 
