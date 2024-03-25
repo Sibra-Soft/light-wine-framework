@@ -46,9 +46,6 @@ Below you find a example of a configuration file for a website/webapplication cr
     "FromName": "Exmaple", // The name you want to use to send the mail
     "FromAddress": "example@example.com" // The emailaddress you want to use to send the mail
   },
-  "imdb": {
-    "omdb_api_key": "" // Api key to connect to the omdbapi.com api
-  },
   "scheduler": {
     "token": "" // Enter the token that must be used to run the scheduler from cronjobs
   }
