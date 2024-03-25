@@ -157,12 +157,32 @@ class FileService {
         return $uploadId;
     }
 
-    public function UploadFileFromWebform(): bool {
+    /**
+     * Upload a file using a webform
+     * @param string $requestFieldname The name of the field in the webform containing the file
+     * @param int $itemId The item id of the item in the database the file must be linked to
+     * @param int $folder The folder the file must be added to after uploading
+     * @param int $user The user the file must be linked to
+     * @param string $property The property this file must take
+     * @param string $filename The filename that must be used when the file is added to the database
+     * @return int The id of the file after it has been uploaded
+     */
+    public function UploadFileFromWebform(string $requestFieldname, int $itemId = 0, int $folder = 0, int $user = 0, string $property = "images", string $filename = ""): int {
 
     }
 
+    /**
+     * Move a specified file to a specified folder
+     * @param int $fileId The id of the file you want to move
+     * @param int $folderId The id of the folder you want to move the file to
+     * @return bool True is the move action has been completed
+     */
     public function MoveFileToFolder(int $fileId, int $folderId): bool {
+        $this->dbConnection->ClearParameters();
+        $this->dbConnection->AddParameter("parent_id", $folderId);
+        $this->dbConnection->helpers->UpdateOrInsertRecordBasedOnParameters("site_files", $fileId);
 
+        return ($this->dbConnection->rowsAffected > 0 ? true : false);
     }
 }
 ?>

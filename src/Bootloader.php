@@ -36,7 +36,6 @@ class Bootloader {
         Route::Post("provider.partial", "/partial.dll", "@PartialServiceProvider", "controller");
         Route::Post("provider.module", "/module.dll", "@ModuleServiceProvider", "controller");
         Route::Post("provider.templates", "/template.dll", "@TemplateServiceProvider", "controller");
-        Route::Post("provider.imdb", "/imdb.dll", "@ImdbServiceProvider", "controller");
         Route::Post("provider.json", "/json.dll", "@JsonServiceProvider", "controller");
         Route::Post("provider.file", "/upload.dll", "@FileServiceProvider", "controller");
 
@@ -78,19 +77,23 @@ class Bootloader {
      * @param TypeError|Exception|Error $exception The thrown exception
      */
     public function SetExceptionHandler($exception){
-        $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
-		$composerJson = json_decode(Helpers::GetFileContent("~/composer.json"), false);
-		
-        $message = StringHelpers::SplitString($exception->getMessage(), "#", 0);
-        $specifiedSource = StringHelpers::SplitString($exception->getMessage(), "#", 1);
+        if(ini_get("display_errors")){
+            $view = Helpers::GetFileContent("~/src/Views/Exception.tpl");
+            $composerJson = json_decode(Helpers::GetFileContent("#/composer.json"), false);
 
-        if(StringHelpers::IsNullOrWhiteSpace($specifiedSource)) $specifiedSource = $exception->getTraceAsString();
+            $message = StringHelpers::SplitString($exception->getMessage(), "#", 0);
+            $specifiedSource = StringHelpers::SplitString($exception->getMessage(), "#", 1);
 
-        $view = str_replace("{{source_file_line}}", $exception->getLine(), $view);
-        $view = str_replace("{{source_file}}", $exception->getFile(), $view);
-        $view = str_replace("{{error_message}}", $message, $view);
-        $view = str_replace("{{source}}", $specifiedSource, $view);
-		$view = str_replace("{{framework_version}}", $composerJson->version, $view);
+            if(StringHelpers::IsNullOrWhiteSpace($specifiedSource)) $specifiedSource = $exception->getTraceAsString();
+
+            $view = str_replace("{{source_file_line}}", $exception->getLine(), $view);
+            $view = str_replace("{{source_file}}", $exception->getFile(), $view);
+            $view = str_replace("{{error_message}}", $message, $view);
+            $view = str_replace("{{source}}", $specifiedSource, $view);
+            $view = str_replace("{{framework_version}}", $composerJson->version, $view);
+        }else{
+            $view = "An error has occurred";
+        }
 
         http_response_code(500);
         HttpResponse::SetContentType("text/html");

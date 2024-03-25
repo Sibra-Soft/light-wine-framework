@@ -1,64 +1,60 @@
 <?php
 namespace LightWine\Modules\Files\Services;
 
+use LightWine\Modules\Cache\Models\CacheReturnModel;
+use LightWine\Modules\Cache\Services\CacheService;
 use LightWine\Modules\Files\Models\ImageFileReturnModel;
-use LightWine\Modules\Database\Services\MysqlConnectionService;
-use LightWine\Modules\Files\Interfaces\IImageFileService;
+use LightWine\Modules\Sam\Services\SamService;
 
-class ImageFileService implements IImageFileService
+class ImageFileService
 {
-    private MysqlConnectionService $databaseConnection;
+    private FileService $fileService;
+    private SamService $samService;
+    private CacheService $cacheService;
 
     public function __construct(){
-        $this->databaseConnection = new MysqlConnectionService();
+        $this->fileService = new FileService;
+        $this->samService = new SamService;
+        $this->cacheService = new CacheService;
     }
 
     /**
-     * Gets a image from the database or cache using the specified filename
-     * @param string $filename The filename of the image you want to get
-     * @return ImageFileReturnModel Model containing all the details of the image
+     * Gets a image from the dBase based on the specified filename
+     * @param string $filename The name of the image you want to get
+     * @throws \Exception When the current user is not allowed to download the image
+     * @return ImageFileReturnModel A model containing all the details of the image
      */
-    public function GetImageByName(string $filename): ImageFileReturnModel {
+    public function GetImage(string $filename): ImageFileReturnModel {
         $returnModel = new ImageFileReturnModel;
+        $cacheModel = new CacheReturnModel();
 
-        $this->databaseConnection->ClearParameters();
-        $this->databaseConnection->AddParameter("filename", $filename);
+        $cacheModel = $this->cacheService->CheckFileCache($filename, 8, "/image_cache/");
 
-        $returnModel->CacheKey = sha1($filename);
-        $returnModel->CacheFile = $_SERVER["DOCUMENT_ROOT"]."/cache/image_cache/".$returnModel->CacheKey.".cache";
+        if(!$cacheModel->Cached){
+            $imageFile = $this->fileService->GetFileByName($filename);
 
-        $cacheFileExists = file_exists($returnModel->CacheFile);
-
-        $returnModel->SaveToCache = $this->databaseConnection->DatasetFirstRow("cache", "boolean");
-
-        if($cacheFileExists){
-            // Check if the file is already saved in the cache
-            $returnModel->FileData = file_get_contents($returnModel->CacheFile);
-        }else{
-            $dataset = $this->databaseConnection->getDataset("SELECT * FROM `site_files` WHERE filename = ?filename LIMIT 1;");
-            
-            // The file could not be found
-            if($this->databaseConnection->rowCount <= 0 && !$cacheFileExists) return $returnModel;
-
-            $userId = $this->databaseConnection->DatasetFirstRow("user_id", "integer");
-
-            if($userId !== 0 && $userId !== $_SESSION["UserId"]){
-                // Check if the current user has permission to view the image
-                $returnModel->Permission = false;
-
-                return $returnModel;
-            }else{
-                foreach($dataset as $row){
-                    $returnModel->FileData = $row["content"];
-
-                    file_put_contents($returnModel->CacheFile, $returnModel->FileData); // Write the file to the cache
+            // Check if the image is allowed to be downloaded by the current user
+            if($imageFile->Policies->USER_MUST_BE_LOGGED_IN){
+                if($this->samService->CheckIfUserIsLoggedin() && $_SESSION["UserId"] !== $imageFile->UserId){
+                    Throw new \Exception("You are not authorized to download the specified image");
                 }
             }
-        }
 
-        $returnModel->FileSize = strlen($returnModel->FileData);
-        $returnModel->ContentType = $this->databaseConnection->DatasetFirstRow("content_type");
-        $returnModel->Found = true;
+            $returnModel->Name = $imageFile->Name;
+            $returnModel->ItemId = $imageFile->LinkedItemId;
+            $returnModel->File = $imageFile;
+
+            // Get image size information
+            $image = imagecreatefromstring($imageFile->Blob);
+            $returnModel->Width = imagesx($image);
+            $returnModel->Height = imagesy($image);
+
+            if($returnModel->File->Policies->FILE_IS_CACHED){
+                file_put_contents($cacheModel->CacheFile, serialize($returnModel));
+            }
+        }else{
+            $returnModel = unserialize(file_get_contents($cacheModel->CacheFile));
+        }
 
         return $returnModel;
     }
