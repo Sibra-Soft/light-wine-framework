@@ -10,7 +10,6 @@ use LightWine\Modules\Communication\Models\MessageModel;
 use LightWine\Modules\Database\Services\MysqlConnectionService;
 use LightWine\Modules\FlashMessages\Services\FlashMessageService;
 use LightWine\Modules\Webform\Services\WebformService;
-use LightWine\Modules\Objects\Services\ObjectService;
 use LightWine\Modules\Communication\Services\MessageQueueService;
 
 class Webform
@@ -18,7 +17,6 @@ class Webform
     private ComponentBase $component;
     private WebformComponentModel $settings;
     private WebformService $webformService;
-    private ObjectService $objectService;
     private MessageQueueService $messageQueue;
     private MysqlConnectionService $databaseConnection;
     private FlashMessageService $flashMessageService;
@@ -26,7 +24,6 @@ class Webform
     public function __construct(int $id){
         $this->component = new ComponentBase();
         $this->webformService = new WebformService();
-        $this->objectService = new ObjectService();
         $this->messageQueue = new MessageQueueService();
         $this->settings = $this->component->GetSettings(new WebformComponentModel, $id);
         $this->databaseConnection = new MysqlConnectionService();
