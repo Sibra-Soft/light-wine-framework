@@ -47,8 +47,14 @@ class BeforeDeployment
             return;
         }
 
+        // Delete directories
         $this->RemoveDir("vendor");
+        $this->RemoveDir("cache");
+
+        // Remove index file
         unlink("index.php");
+        
+        // Activate offline mode
         rename("_index.html", "index.html");
 
         echo("finished");
