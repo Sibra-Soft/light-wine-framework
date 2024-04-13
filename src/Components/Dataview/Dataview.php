@@ -121,7 +121,7 @@ class Dataview {
                 foreach($row as $key => $value){ $this->templatingService->AddReplaceVariable($key, $value); }
                 $controlTemplate = $this->templatingService->RunCompilers($controlTemplate);
 
-                $template .= $this->templatingService->ReplaceVariablesFromStore($controlTemplate);
+                $template .= html_entity_decode($this->templatingService->ReplaceVariablesFromStore($controlTemplate));
 
                 if($this->component->DetermineOddEvenRows){
                     $index++;
