@@ -10,7 +10,7 @@
       "LightWine\\": "src/"
     }
   },
-  "version":  "1.0.12",
+  "version":  "1.0.13",
   "description": "PHP web framework for running websites and webapplications",
   "license": "MIT",
   "name": "sibra-soft/light-wine-framework",
