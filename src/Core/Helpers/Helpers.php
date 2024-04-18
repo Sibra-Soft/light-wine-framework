@@ -132,10 +132,13 @@ class Helpers {
         $content = "";
 
         $filename = self::MapPath($filename);
+        $filesize = filesize($filename);
 
-        $myfile = fopen($filename, "r") or die("Unable to open file: ".$filename);
-        $content = fread($myfile, filesize($filename));
-        fclose($myfile);
+        if($filesize > 0){
+            $myfile = fopen($filename, "r") or die("Unable to open file: ".$filename);
+            $content = fread($myfile, $filesize);
+            fclose($myfile);
+        }
 
         return iconv("UTF-8","ISO-8859-1//IGNORE", $content);
     }
