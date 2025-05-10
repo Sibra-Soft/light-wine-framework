@@ -12,7 +12,11 @@ class Helpers {
     public static function MapPath(string $path): string {
         $path = str_replace("~", dirname(__FILE__, 3), $path);
         $path = str_replace("#", dirname(__FILE__, 4), $path);
-        $path = str_replace("..", $_SERVER["DOCUMENT_ROOT"], $path);
+
+		if(str_starts_with($path, "..")){
+			$path = str_replace("..", $_SERVER["DOCUMENT_ROOT"], $path);
+		}
+		
         $path = str_replace("/src/src/", "/src/", $path);
         $path = str_replace("\src/src/", "/src/", $path);
 
@@ -132,11 +136,14 @@ class Helpers {
         $content = "";
 
         $filename = self::MapPath($filename);
+        $filesize = filesize($filename);
 
-        $myfile = fopen($filename, "r") or die("Unable to open file: ".$filename);
-        $content = fread($myfile, filesize($filename));
-        fclose($myfile);
-
+        if($filesize > 0){
+            $myfile = fopen($filename, "r") or die("Unable to open file: ".$filename);
+            $content = fread($myfile, $filesize);
+            fclose($myfile);
+        }
+		
         return iconv("UTF-8","ISO-8859-1//IGNORE", $content);
     }
 
